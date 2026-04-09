@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisi Bolletta — SORICAL Tools</title>
+<style>
+  :root {
+    --blu: #003d80; --blu-ch: #0066cc; --acqua: #00aacc;
+    --grigio: #f4f7fb; --grigio-b: #dde4ed;
+    --verde: #1a9e5a; --rosso: #cc2200;
+    --bianco: #fff; --nero: #1a2a3a; --testo-light: #6b7a8d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--grigio); color:var(--nero); min-height:100vh; }
+
+  header {
+    background:var(--blu); color:white; padding:0 24px; height:56px;
+    display:flex; align-items:center; gap:12px;
+  }
+  header a { color:rgba(255,255,255,0.6); text-decoration:none; font-size:13px; }
+  header a:hover { color:white; }
+  header .sep { color:rgba(255,255,255,0.3); }
+  header .current { color:white; font-size:13px; font-weight:600; }
+
+  .container { max-width:720px; margin:0 auto; padding:32px 20px; }
+
+  .page-title { font-size:24px; font-weight:700; color:var(--blu); margin-bottom:6px; }
+  .page-desc { font-size:14px; color:var(--testo-light); margin-bottom:28px; }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border:2px dashed var(--grigio-b); border-radius:12px; background:white;
+    padding:48px 24px; text-align:center; cursor:pointer;
+    transition:border-color 0.2s, background 0.2s;
+    position:relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color:var(--blu-ch); background:#f0f6ff;
+  }
+  .drop-zone input[type=file] {
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+  .drop-icon { font-size:40px; margin-bottom:12px; }
+  .drop-text { font-size:15px; font-weight:600; color:var(--blu); margin-bottom:4px; }
+  .drop-sub { font-size:13px; color:var(--testo-light); }
+
+  /* PROGRESS */
+  .progress-wrap { display:none; margin-top:20px; }
+  .progress-bar-bg { background:var(--grigio-b); border-radius:8px; height:8px; overflow:hidden; }
+  .progress-bar { height:100%; background:var(--blu-ch); border-radius:8px; width:0%; transition:width 0.3s; }
+  .progress-label { font-size:13px; color:var(--testo-light); margin-top:6px; text-align:center; }
+
+  /* RISULTATO */
+  #risultato { display:none; margin-top:28px; }
+
+  .section-title {
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+    color:var(--blu-ch); margin:20px 0 8px;
+  }
+
+  /* RIEPILOGO CARD */
+  .summary-header {
+    background:var(--blu); color:white; border-radius:10px 10px 0 0;
+    padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .summary-header .fattura { font-size:13px; opacity:0.75; }
+  .summary-header .num { font-size:15px; font-weight:700; }
+  .summary-header .totale-label { font-size:11px; opacity:0.7; text-align:right; }
+  .summary-header .totale-val { font-size:26px; font-weight:700; }
+
+  .info-grid {
+    background:white; border:1px solid var(--grigio-b); border-top:none;
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+  }
+  .info-cell {
+    padding:10px 16px; border-bottom:1px solid var(--grigio-b);
+  }
+  .info-cell:nth-child(odd) { border-right:1px solid var(--grigio-b); }
+  .info-cell .lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--testo-light); margin-bottom:2px; }
+  .info-cell .val { font-size:13px; font-weight:600; color:var(--nero); }
+
+  /* IMPORTI TABLE */
+  .importi-table { width:100%; border-collapse:collapse; background:white; border-radius:0 0 10px 10px; overflow:hidden; border:1px solid var(--grigio-b); border-top:none; }
+  .importi-table tr { border-bottom:1px solid var(--grigio-b); }
+  .importi-table tr:last-child { border-bottom:none; }
+  .importi-table tr:nth-child(even) { background:var(--grigio); }
+  .importi-table td { padding:9px 16px; font-size:13px; }
+  .importi-table td:last-child { text-align:right; font-weight:600; }
+  .importi-table .tot-row td { background:var(--blu); color:white; font-weight:700; font-size:15px; }
+  .importi-table .imponibile-row td { color:var(--testo-light); font-size:12px; }
+  .importi-table .detrazione-row td { color:var(--verde); font-weight:700; }
+
+  /* COSTO MC */
+  .mc-card {
+    background:white; border:1px solid var(--grigio-b); border-radius:10px;
+    padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .mc-label { font-size:13px; font-weight:600; color:var(--nero); }
+  .mc-sub { font-size:11px; color:var(--testo-light); margin-top:2px; }
+  .mc-val { font-size:24px; font-weight:700; color:var(--blu-ch); }
+
+  /* DEPOSITO CARD */
+  .deposito-card { background:white; border:1px solid var(--grigio-b); border-radius:10px; overflow:hidden; }
+  .deposito-card .dep-header { background:#ddeeff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+  .deposito-card .dep-header .dep-lbl { font-size:13px; font-weight:600; color:var(--blu); }
+  .deposito-card .dep-header .dep-val { font-size:18px; font-weight:700; color:var(--blu); }
+  .deposito-card .dep-row { padding:8px 16px; display:flex; justify-content:space-between; border-bottom:1px solid var(--grigio-b); font-size:12px; }
+  .deposito-card .dep-row .dep-r-lbl { color:var(--testo-light); }
+  .deposito-card .dep-row .dep-r-val { font-weight:600; }
+  .dep-stato { padding:10px 16px; font-size:12px; font-weight:700; }
+  .dep-stato.addebitato { color:var(--rosso); }
+  .dep-stato.versato { color:var(--verde); }
+  .dep-note { padding:10px 16px; font-size:11px; color:var(--testo-light); background:var(--grigio); line-height:1.6; }
+
+  /* INFO BOLLETTA */
+  .info-bolletta-box {
+    background:#eef4ff; border:1px solid #c5d9f5; border-radius:10px;
+    padding:14px 16px; font-size:13px; color:var(--nero); line-height:1.7;
+  }
+
+  /* BOTTONE STAMPA */
+  .btn-print {
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--blu-ch); color:white; border:none; border-radius:8px;
+    padding:12px 24px; font-size:14px; font-weight:600; cursor:pointer;
+    margin-top:24px; transition:background 0.15s;
+  }
+  .btn-print:hover { background:var(--blu); }
+
+  /* ERROR */
+  .error-box {
+    background:#fff0ee; border:1px solid #f5c5be; border-radius:10px;
+    padding:14px 16px; color:var(--rosso); font-size:13px; display:none; margin-top:16px;
+  }
+
+  @media print {
+    header, .drop-zone, .progress-wrap, .btn-print { display:none !important; }
+    body { background:white; }
+    .container { padding:0; max-width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../">← Tools SORICAL</a>
+  <span class="sep">/</span>
+  <span class="current">Analisi Bolletta</span>
+</header>
+
+<div class="container">
+  <div class="page-title">📄 Analisi Bolletta</div>
+  <div class="page-desc">Carica una bolletta SORICAL in PDF per ottenere un riepilogo immediato con tutti i dati principali.</div>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".pdf">
+    <div class="drop-icon">📂</div>
+    <div class="drop-text">Trascina qui la bolletta PDF</div>
+    <div class="drop-sub">oppure clicca per selezionare il file</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel">Lettura PDF...</div>
+  </div>
+
+  <div id="risultato"></div>
+</div>
+
+<!-- pdf.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ─── DRAG & DROP ───────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') processFile(f);
+  else showError('Il file deve essere un PDF.');
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) processFile(fileInput.files[0]);
+});
+
+// ─── PROCESSING ────────────────────────────────────────────────
+async function processFile(file) {
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('risultato').style.display = 'none';
+  showProgress(10, 'Lettura PDF...');
+
+  try {
+    const buf = await file.arrayBuffer();
+    showProgress(30, 'Estrazione testo...');
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+    let testo = '';
+    const maxPag = Math.min(pdf.numPages, 5);
+    for (let i = 1; i <= maxPag; i++) {
+      showProgress(30 + Math.round(i / maxPag * 40), `Analisi pagina ${i}...`);
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      testo += tc.items.map(it => it.str).join(' ') + '\n';
+    }
+
+    showProgress(80, 'Elaborazione dati...');
+    const dati = estrai(testo);
+    showProgress(100, 'Completato!');
+
+    setTimeout(() => {
+      document.getElementById('progressWrap').style.display = 'none';
+      mostraRisultato(dati);
+    }, 400);
+
+  } catch (e) {
+    hideProgress();
+    showError('Errore nella lettura del PDF: ' + e.message);
+  }
+}
+
+// ─── ESTRAZIONE ────────────────────────────────────────────────
+function trova(testo, pattern, gruppo, def) {
+  grupo = gruppo || 1; def = def || '—';
+  const m = testo.match(new RegExp(pattern, 'is'));
+  return m ? (m[grupo] || '').trim() : def;
+}
+
+function trovaImporto(testo, voce) {
+  const esc = voce.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = testo.match(new RegExp(esc + '\\s*[€]?\\s*([\\d.,]+)', 'i'));
+  return m ? m[1] : '—';
+}
+
+function trovaPeriodo(testo) {
+  const m = testo.match(/Periodo fatturato\s+Dal\s+(\d{2}\/\d{2}\/\d{4})\s+Al\s+(\d{2}\/\d{2}\/\d{4})/i);
+  return m ? `Dal ${m[1]} al ${m[2]}` : '—';
+}
+
+function trovaInfoBolletta(testo) {
+  let m = testo.match(/Questa bolletta.+?(?=COMUNICAZIONI|Nell.ultima\s+pagina|SORICAL S\.p\.A\. -)/is);
+  if (!m) m = testo.match(/Info Bolletta\s+(.+?)(?:Letture e Consumi|Storico|PAGAMENTI)/is);
+  if (m) {
+    let t = m[0];
+    ['Tipologia Utenza\\s*N\\.U\\.A\\.?', 'Domestiche Residenti\\s*\\d*',
+     'N\\.U\\.A\\.:\\s*Numero Unit[àa] Abitative', 'Riepilogo Tipologia Utenza',
+     'PAGAMENTI PRECEDENTI', 'COMUNICAZIONI'].forEach(a => {
+      t = t.replace(new RegExp(a, 'gi'), '');
+    });
+    return t.replace(/\s+/g, ' ').trim();
+  }
+  return '—';
+}
+
+function calcolaCostoMedio(testo, dati) {
+  try {
+    const consumo = parseInt(dati.consumo);
+    if (!consumo) return '—';
+    const hasDetrazione = /Detrazione Acconti/i.test(testo);
+    if (hasDetrazione) {
+      const v = k => { try { return parseFloat((trovaImporto(testo,k)||'0').replace(',','.')); } catch { return 0; }};
+      const lordo = v('Quota Fissa') + v('Acquedotto') + v('Fognatura') + v('Depurazione') + v('Oneri Perequazione');
+      if (lordo > 0) return (lordo / consumo).toFixed(4).replace('.', ',');
+    } else {
+      const imp = parseFloat((trovaImporto(testo,'Totale Imponibile')||'0').replace(',','.'));
+      if (imp > 0) return (imp / consumo).toFixed(4).replace('.', ',');
+    }
+  } catch(e){}
+  return '—';
+}
+
+function estrai(testo) {
+  const d = {
+    numFattura:        trova(testo, 'Fattura num\\.\\s*(BOL/[\\d/]+)'),
+    dataEmissione:     trova(testo, 'del\\s+(\\d{2}/\\d{2}/\\d{4})'),
+    intestatario:      trova(testo, 'Egr\\./Spett\\.le\\s+([A-Z][A-Z\\s]+?)\\s+(?:VIA|CORSO|PIAZZA|LOC|STR)'),
+    codiceCliente:     trova(testo, 'Codice cliente\\s+(\\d{6,})'),
+    codiceFornitura:   trova(testo, 'Codice Fornitura\\s+(\\d{6,})'),
+    matricola:         trova(testo, 'Matricola contatore\\s+([\\d]+)'),
+    periodo:           trovaPeriodo(testo),
+    consumo:           trova(testo, 'Consumo fatturato\\s+(\\d+)\\s*mc'),
+    tipoUtenza:        trova(testo, 'Tipo utenza\\s+([A-Za-z\\s]+?)(?:Cons\\.|Tipo tariffa|$)'),
+    deposito:          trova(testo, 'Deposito cauzionale\\s+([\\d,.]+)'),
+    quotaFissa:        trovaImporto(testo, 'Quota Fissa'),
+    acquedotto:        trovaImporto(testo, 'Acquedotto'),
+    fognatura:         trovaImporto(testo, 'Fognatura'),
+    depurazione:       trovaImporto(testo, 'Depurazione'),
+    oneri:             trovaImporto(testo, 'Oneri Perequazione'),
+    altrePartite:      trovaImporto(testo, 'Altre Partite'),
+    detrazioneAcconti: trova(testo, 'Detrazione Acconti\\s*[€]?\\s*(-[\\d,.]+)'),
+    totImponibile:     trovaImporto(testo, 'Totale Imponibile'),
+    totIVA:            trovaImporto(testo, 'Totale IVA'),
+    totFattura:        trova(testo, 'Totale Fattura\\s*[€]?\\s*([\\d.,]+)'),
+    scadenza:          trova(testo, 'Scadenza\\s+(\\d{2}/\\d{2}/\\d{4})'),
+    pagPrec:           /risultano regolari/i.test(testo) ? 'Regolari' : 'Verificare',
+    infoBolletta:      trovaInfoBolletta(testo),
+    consMedio:         trova(testo, 'Cons\\.\\s*Medio\\s*Annuo[^:]*:\\s*(\\d+)\\s*mc'),
+    tipologiaFatt:     trova(testo, 'Tipologia fatturazione\\s+([^\\n]{5,60})'),
+    isConguaglio:      /Detrazione Acconti/i.test(testo),
+  };
+  d.costoMedioMc = calcolaCostoMedio(testo, d);
+  return d;
+}
+
+// ─── VISUALIZZAZIONE ───────────────────────────────────────────
+function mostraRisultato(d) {
+  const r = document.getElementById('risultato');
+  r.style.display = 'block';
+
+  // Importi voci
+  const voci = [
+    ['Quota Fissa', d.quotaFissa, false],
+    ['Acquedotto', d.acquedotto, false],
+    ['Fognatura', d.fognatura, false],
+    ['Depurazione', d.depurazione, false],
+  ];
+  if (d.oneri !== '—') voci.push(['Oneri Perequazione', d.oneri, false]);
+  if (d.detrazioneAcconti !== '—') voci.push(['Detrazione Acconti (acconti già pagati)', d.detrazioneAcconti, true]);
+  if (d.altrePartite !== '—') voci.push(['Altre Partite', d.altrePartite, false]);
+
+  const righeVoci = voci.map(([lbl, val, det]) =>
+    `<tr class="${det ? 'detrazione-row' : ''}"><td>${lbl}</td><td>€ ${val}</td></tr>`
+  ).join('');
+
+  r.innerHTML = `
+    <!-- HEADER -->
+    <div class="summary-header">
+      <div>
+        <div class="fattura">Fattura</div>
+        <div class="num">${d.numFattura}</div>
+        <div class="fattura" style="margin-top:2px">Emessa il ${d.dataEmissione} · Scadenza ${d.scadenza}</div>
+      </div>
+      <div>
+        <div class="totale-label">TOTALE DA PAGARE</div>
+        <div class="totale-val">€ ${d.totFattura}</div>
+      </div>
+    </div>
+
+    <!-- DATI CLIENTE -->
+    <div class="info-grid">
+      <div class="info-cell"><div class="lbl">Intestatario</div><div class="val">${d.intestatario}</div></div>
+      <div class="info-cell"><div class="lbl">Periodo</div><div class="val">${d.periodo}</div></div>
+      <div class="info-cell"><div class="lbl">Codice Cliente</div><div class="val">${d.codiceCliente}</div></div>
+      <div class="info-cell"><div class="lbl">Consumo fatturato</div><div class="val">${d.consumo} mc</div></div>
+      <div class="info-cell"><div class="lbl">Codice Fornitura</div><div class="val">${d.codiceFornitura}</div></div>
+      <div class="info-cell"><div class="lbl">Cons. medio annuo</div><div class="val">${d.consMedio} mc</div></div>
+      <div class="info-cell"><div class="lbl">Matricola Contatore</div><div class="val">${d.matricola}</div></div>
+      <div class="info-cell"><div class="lbl">Tipo utenza</div><div class="val">${d.tipoUtenza.trim()}</div></div>
+      <div class="info-cell"><div class="lbl">Tipologia fatturazione</div><div class="val">${d.tipologiaFatt}</div></div>
+      <div class="info-cell"><div class="lbl">Pagamenti precedenti</div><div class="val" style="color:${d.pagPrec==='Regolari'?'var(--verde)':'var(--rosso)'}">${d.pagPrec}</div></div>
+    </div>
+
+    <!-- COSTO MC -->
+    ${d.costoMedioMc !== '—' ? `
+    <div class="section-title">Costo per Metro Cubo</div>
+    <div class="mc-card">
+      <div>
+        <div class="mc-label">Costo medio complessivo</div>
+        <div class="mc-sub">${d.isConguaglio ? 'Calcolato al lordo (prima delle detrazioni acconti)' : 'Totale imponibile ÷ consumo fatturato'}</div>
+      </div>
+      <div class="mc-val">${d.costoMedioMc} €/mc</div>
+    </div>` : ''}
+
+    <!-- IMPORTI -->
+    <div class="section-title">Dettaglio Importi</div>
+    <table class="importi-table">
+      ${righeVoci}
+      <tr class="imponibile-row"><td>Totale Imponibile</td><td>€ ${d.totImponibile}</td></tr>
+      <tr class="imponibile-row"><td>IVA</td><td>€ ${d.totIVA}</td></tr>
+      <tr class="tot-row"><td>TOTALE FATTURA</td><td>€ ${d.totFattura}</td></tr>
+    </table>
+
+    <!-- DEPOSITO -->
+    ${d.deposito && d.deposito !== '—' ? `
+    <div class="section-title">Deposito Cauzionale</div>
+    <div class="deposito-card">
+      <div class="dep-header">
+        <span class="dep-lbl">Importo registrato sul contratto</span>
+        <span class="dep-val">€ ${d.deposito}</span>
+      </div>
+      <div class="dep-stato ${parseFloat((d.deposito||'0').replace(',','.')) > 0 ? 'versato' : 'versato'}">
+        ${parseFloat((d.deposito||'0').replace(',','.')) === 0 ? '✓ Deposito zero — domiciliazione attiva o esonero' : '✓ Già versato — non addebitato in questa fattura'}
+      </div>
+      <div class="dep-note">ℹ️ Il deposito cauzionale è pari a 3 mensilità del consumo medio storico (Art. 10 Reg. SII). Viene versato una volta alla stipula e restituito alla cessazione del contratto. Con domiciliazione bancaria attiva, viene restituito immediatamente con gli interessi maturati.</div>
+    </div>` : ''}
+
+    <!-- INFO BOLLETTA -->
+    ${d.infoBolletta && d.infoBolletta !== '—' ? `
+    <div class="section-title">Info Bolletta</div>
+    <div class="info-bolletta-box">${d.infoBolletta}</div>` : ''}
+
+    <button class="btn-print" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+  `;
+}
+
+// ─── UI HELPERS ────────────────────────────────────────────────
+function showProgress(pct, label) {
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label;
+}
+function hideProgress() {
+  document.getElementById('progressWrap').style.display = 'none';
+}
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = '❌ ' + msg;
+  b.style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SORICAL Tools — Strumenti Interni</title>
+<style>
+  :root {
+    --blu: #003d80;
+    --blu-ch: #0066cc;
+    --acqua: #00aacc;
+    --grigio: #f4f7fb;
+    --grigio-b: #dde4ed;
+    --verde: #1a9e5a;
+    --bianco: #ffffff;
+    --nero: #1a2a3a;
+    --testo-light: #6b7a8d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--grigio); color: var(--nero); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--blu);
+    color: white;
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  header .sep { width: 1px; height: 28px; background: rgba(255,255,255,0.25); }
+  header .subtitle { font-size: 13px; color: rgba(255,255,255,0.7); }
+  header .badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--blu) 0%, #0055b3 100%);
+    color: white;
+    padding: 48px 32px 40px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .hero p { font-size: 15px; color: rgba(255,255,255,0.75); max-width: 520px; margin: 0 auto; }
+
+  /* GRID */
+  .tools-grid {
+    max-width: 960px;
+    margin: 40px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,61,128,0.08);
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,61,128,0.15);
+  }
+  .card-header {
+    padding: 20px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--grigio-b);
+  }
+  .card-icon {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .card-icon.blu   { background: #e8f0fb; }
+  .card-icon.verde { background: #e6f7ef; }
+  .card-icon.acqua { background: #e0f5fa; }
+  .card-icon.arancio { background: #fff3e6; }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--blu); line-height: 1.3; }
+  .card-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--testo-light);
+    margin-top: 2px;
+  }
+  .card-body {
+    padding: 14px 20px 18px;
+    flex: 1;
+  }
+  .card-desc { font-size: 13px; color: var(--testo-light); line-height: 1.6; }
+  .card-footer {
+    padding: 12px 20px;
+    background: var(--grigio);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--grigio-b);
+  }
+  .card-footer .status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+  .status.attivo   { background: #d4f0e2; color: #0f7a43; }
+  .status.presto   { background: #fdefd8; color: #9a5a00; }
+  .card-footer .arrow { color: var(--blu-ch); font-size: 18px; }
+
+  /* COMING SOON overlay */
+  .card.disabled { opacity: 0.7; pointer-events: none; cursor: default; }
+
+  /* SECTION LABEL */
+  .section-label {
+    max-width: 960px;
+    margin: 0 auto 12px;
+    padding: 0 24px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--testo-light);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 12px;
+    color: var(--testo-light);
+    border-top: 1px solid var(--grigio-b);
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">SORICAL S.p.A.</span>
+  <div class="sep"></div>
+  <span class="subtitle">Strumenti Interni — Ufficio Gestione Clienti</span>
+  <span class="badge">Solo uso interno</span>
+</header>
+
+<div class="hero">
+  <h1>Tools Sportello</h1>
+  <p>Strumenti digitali per supportare il lavoro quotidiano degli sportellisti SORICAL</p>
+</div>
+
+<div class="section-label">Strumenti disponibili</div>
+<div class="tools-grid">
+
+  <a class="card" href="bolletta/index.html">
+    <div class="card-header">
+      <div class="card-icon blu">📄</div>
+      <div>
+        <div class="card-title">Analisi Bolletta</div>
+        <div class="card-tag">Lettura PDF</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="card-desc">Carica una bolletta SORICAL in PDF e ottieni un riepilogo chiaro: importi, consumi, deposito cauzionale, costo al metro cubo e note spiegazione.</p>
+    </div>
+    <div class="card-footer">
+      <span class="status attivo">✓ Disponibile</span>
+      <span class="arrow">›</span>
+    </div>
+  </a>
+
+  <div class="card disabled">
+    <div class="card-header">
+      <div class="card-icon verde">💧</div>
+      <div>
+        <div class="card-title">Calcolo Deposito Cauzionale</div>
+        <div class="card-tag">Contratti</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="card-desc">Calcola l'importo del deposito cauzionale per un nuovo contratto in base al consumo medio annuo e alla tariffa applicata.</p>
+    </div>
+    <div class="card-footer">
+      <span class="status presto">In arrivo</span>
+    </div>
+  </div>
+
+  <div class="card disabled">
+    <div class="card-header">
+      <div class="card-icon acqua">🔍</div>
+      <div>
+        <div class="card-title">Verifica Tariffe</div>
+        <div class="card-tag">Tariffario</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="card-desc">Consulta le tariffe SII vigenti per fascia di consumo, tipo utenza e anno di riferimento, approvate da ARRICAL.</p>
+    </div>
+    <div class="card-footer">
+      <span class="status presto">In arrivo</span>
+    </div>
+  </div>
+
+  <div class="card disabled">
+    <div class="card-header">
+      <div class="card-icon arancio">📋</div>
+      <div>
+        <div class="card-title">Checklist Voltura</div>
+        <div class="card-tag">Pratiche</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="card-desc">Guida passo-passo per la gestione di una pratica di voltura: documenti necessari, verifiche, tempistiche e note operative.</p>
+    </div>
+    <div class="card-footer">
+      <span class="status presto">In arrivo</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  SORICAL S.p.A. — Viale Europa 35, Catanzaro — Uso riservato al personale interno
+</footer>
+
+</body>
+</html>
