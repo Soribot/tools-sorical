@@ -320,7 +320,12 @@ function estrai(testo) {
     totIVA:            trovaImporto(testo, 'Totale IVA'),
     totFattura:        trova(testo, 'Totale Fattura\\s*[€]?\\s*([\\d.,]+)'),
     scadenza:          trova(testo, 'Scadenza\\s+(\\d{2}/\\d{2}/\\d{4})'),
-    pagPrec:           /risultano regolari/i.test(testo) ? 'Regolari' : 'Verificare',
+    pagPrec:           (() => {
+      if (/risultano\s+regolari|pagamenti\s+regolari|sono\s+regolari|regolarmente\s+pagat|pagato\s+regolarmente/i.test(testo)) return 'Regolari';
+      if (/pagamenti\s+precedenti\s*[:\-]?\s*regolar/i.test(testo)) return 'Regolari';
+      if (/non\s+risultano\s+regolari|non\s+regolari|morosit|sollecito|insoluto/i.test(testo)) return 'Non regolari';
+      return '—';
+    })(),
     infoBolletta:      trovaInfoBolletta(testo),
     consMedio:         trova(testo, 'Cons\\.\\s*Medio\\s*Annuo[^:]*:\\s*(\\d+)\\s*mc'),
     tipologiaFatt:     trova(testo, 'Tipologia fatturazione\\s+([^\\n]{5,60})'),
@@ -381,7 +386,7 @@ function mostraRisultato(d) {
       <div class="info-cell"><div class="lbl">Matricola Contatore</div><div class="val">${d.matricola}</div></div>
       <div class="info-cell"><div class="lbl">Tipo utenza</div><div class="val">${d.tipoUtenza.trim()}</div></div>
       <div class="info-cell"><div class="lbl">Tipologia fatturazione</div><div class="val">${d.tipologiaFatt}</div></div>
-      <div class="info-cell"><div class="lbl">Pagamenti precedenti</div><div class="val" style="color:${d.pagPrec==='Regolari'?'var(--verde)':'var(--rosso)'}">${d.pagPrec}</div></div>
+      <div class="info-cell"><div class="lbl">Pagamenti precedenti</div><div class="val" style="color:${d.pagPrec==='Regolari'?'var(--verde)':d.pagPrec==='Non regolari'?'var(--rosso)':'var(--testo-light)'}">${d.pagPrec}</div></div>
       ${d.lettPrec ? `<div class="info-cell"><div class="lbl">Lettura precedente</div><div class="val">${d.lettPrec.valore} mc <span style="color:var(--testo-light);font-size:11px">(${d.lettPrec.data})</span></div></div>` : ''}
       ${d.lettAtt  ? `<div class="info-cell"><div class="lbl">Lettura attuale</div><div class="val">${d.lettAtt.valore} mc <span style="color:var(--testo-light);font-size:11px">(${d.lettAtt.data})</span></div></div>` : ''}
     </div>
