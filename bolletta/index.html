@@ -283,27 +283,21 @@ function calcolaCostoMedio(testo, dati) {
 
 function trovaFasce(testo) {
   const fasce = [];
-  // Pattern: "Fascia 1", "Fascia 2", "Fascia 3" con mc e importo
-  // es: "Fascia 1 50 mc 12,34" oppure "1ª Fascia 50 mc € 12,34"
-  const patterns = [
-    /Fascia\s*(\d)\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
-    /(\d)[ªa°]\s*Fascia\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
-    /F(\d)\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
-  ];
-  for (const pat of patterns) {
-    let m;
-    pat.lastIndex = 0;
-    while ((m = pat.exec(testo)) !== null) {
-      const num = parseInt(m[1]);
-      if (num >= 1 && num <= 5) {
-        if (!fasce.find(f => f.fascia === num)) {
-          fasce.push({ fascia: num, mc: m[2], importo: m[3] });
-        }
-      }
-    }
-    if (fasce.length > 0) break;
+  // Pattern SORICAL: "Fino a 18 mc 10 mc 3,20" oppure "Da 18 a 55 mc 8 mc 2,80"
+  // Formato: descrizione banda — mc consumati — importo
+  const pat = /((?:Fino a|Da\s+\d+\s+a)\s+\d+\s*mc)\s+(\d+)\s*mc[^\d]*(\d[\d,.]*)/gi;
+  let m;
+  while ((m = pat.exec(testo)) !== null) {
+    fasce.push({ label: m[1].replace(/\s+/g,' ').trim(), mc: m[2], importo: m[3] });
   }
-  return fasce.sort((a, b) => a.fascia - b.fascia);
+  // fallback: "Oltre X mc"
+  if (fasce.length === 0) {
+    const pat2 = /(Oltre\s+\d+\s*mc)\s+(\d+)\s*mc[^\d]*(\d[\d,.]*)/gi;
+    while ((m = pat2.exec(testo)) !== null) {
+      fasce.push({ label: m[1].replace(/\s+/g,' ').trim(), mc: m[2], importo: m[3] });
+    }
+  }
+  return fasce;
 }
 
 function trovaLettura(testo, tipo) {
@@ -385,7 +379,7 @@ function mostraRisultato(d) {
 
   const righeFasce = d.fasceAcquedotto.length > 0
     ? d.fasceAcquedotto.map(f =>
-        `<tr class="fascia-row"><td style="padding-left:24px">↳ Fascia ${f.fascia} — ${f.mc} mc</td><td>€ ${f.importo}</td></tr>`
+        `<tr class="fascia-row"><td style="padding-left:24px">↳ ${f.label} → <b>${f.mc} mc</b></td><td>€ ${f.importo}</td></tr>`
       ).join('')
     : '';
 
