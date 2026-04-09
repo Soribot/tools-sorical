@@ -90,6 +90,7 @@
   .importi-table .tot-row td { background:var(--blu); color:white; font-weight:700; font-size:15px; }
   .importi-table .imponibile-row td { color:var(--testo-light); font-size:12px; }
   .importi-table .detrazione-row td { color:var(--verde); font-weight:700; }
+  .importi-table .fascia-row td { font-size:12px; color:var(--testo-light); background:#f8fafd; border-bottom:1px solid var(--grigio-b); }
   .importi-table .detrazione-nota td { background:#f0faf5; color:#2a7a4f; font-size:11px; line-height:1.6; padding:6px 12px 10px; border-bottom:1px solid #c8e8d8; font-style:italic; }
 
   /* COSTO MC */
@@ -277,6 +278,31 @@ function calcolaCostoMedio(testo, dati) {
   return '—';
 }
 
+function trovaFasce(testo) {
+  const fasce = [];
+  // Pattern: "Fascia 1", "Fascia 2", "Fascia 3" con mc e importo
+  // es: "Fascia 1 50 mc 12,34" oppure "1ª Fascia 50 mc € 12,34"
+  const patterns = [
+    /Fascia\s*(\d)\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
+    /(\d)[ªa°]\s*Fascia\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
+    /F(\d)\s+(\d+)\s*mc[^\d]*([\\d,.]+)/gi,
+  ];
+  for (const pat of patterns) {
+    let m;
+    pat.lastIndex = 0;
+    while ((m = pat.exec(testo)) !== null) {
+      const num = parseInt(m[1]);
+      if (num >= 1 && num <= 5) {
+        if (!fasce.find(f => f.fascia === num)) {
+          fasce.push({ fascia: num, mc: m[2], importo: m[3] });
+        }
+      }
+    }
+    if (fasce.length > 0) break;
+  }
+  return fasce.sort((a, b) => a.fascia - b.fascia);
+}
+
 function trovaLettura(testo, tipo) {
   // Cerca "Lettura Precedente" o "Lettura Attuale/Effettiva/Stimata"
   let pattern;
@@ -311,6 +337,7 @@ function estrai(testo) {
     deposito:          trova(testo, 'Deposito cauzionale\\s+([\\d,.]+)'),
     quotaFissa:        trovaImporto(testo, 'Quota Fissa'),
     acquedotto:        trovaImporto(testo, 'Acquedotto'),
+    fasceAcquedotto:   trovaFasce(testo),
     fognatura:         trovaImporto(testo, 'Fognatura'),
     depurazione:       trovaImporto(testo, 'Depurazione'),
     oneri:             trovaImporto(testo, 'Oneri Perequazione'),
@@ -353,8 +380,15 @@ function mostraRisultato(d) {
   if (d.detrazioneAcconti !== '—') voci.push(['Detrazione Acconti (acconti già pagati)', d.detrazioneAcconti, true]);
   if (d.altrePartite !== '—') voci.push(['Altre Partite', d.altrePartite, false]);
 
+  const righeFasce = d.fasceAcquedotto.length > 0
+    ? d.fasceAcquedotto.map(f =>
+        `<tr class="fascia-row"><td style="padding-left:24px">↳ Fascia ${f.fascia} — ${f.mc} mc</td><td>€ ${f.importo}</td></tr>`
+      ).join('')
+    : '';
+
   const righeVoci = voci.map(([lbl, val, det]) => {
     let row = `<tr class="${det ? 'detrazione-row' : ''}"><td>${lbl}</td><td>€ ${val}</td></tr>`;
+    if (lbl === 'Acquedotto' && righeFasce) row += righeFasce;
     if (det) {
       row += `<tr class="detrazione-nota"><td colspan="2">ℹ️ Importi già fatturati in precedenza (acconti) ora stornati nel conguaglio. Il costo al metro cubo è calcolato al lordo, prima di questa detrazione. Il dettaglio è riportato nella sezione Info Bolletta.</td></tr>`;
     }
