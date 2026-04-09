@@ -289,23 +289,38 @@ function calcolaCostoMedio(testo, dati) {
   return '—';
 }
 
-function trovaFasce(testo) {
-  const fasce = [];
-  // Pattern SORICAL: "Fino a 18 mc 10 mc 3,20" oppure "Da 18 a 55 mc 8 mc 2,80"
-  // Formato: descrizione banda — mc consumati — importo
-  const pat = /((?:Fino a|Da\s+\d+\s+a)\s+\d+\s*mc)\s+(\d+)\s*mc[^\d]*(\d[\d,.]*)/gi;
-  let m;
-  while ((m = pat.exec(testo)) !== null) {
-    fasce.push({ label: m[1].replace(/\s+/g,' ').trim(), mc: m[2], importo: m[3] });
-  }
-  // fallback: "Oltre X mc"
-  if (fasce.length === 0) {
-    const pat2 = /(Oltre\s+\d+\s*mc)\s+(\d+)\s*mc[^\d]*(\d[\d,.]*)/gi;
-    while ((m = pat2.exec(testo)) !== null) {
-      fasce.push({ label: m[1].replace(/\s+/g,' ').trim(), mc: m[2], importo: m[3] });
+function calcolaFasceAcquedotto(d) {
+  // ARRICAL SII 2025 — soglie annuali mc e tariffe acquedotto (uso domestico residente)
+  const SOGLIE = [54, 165, 195]; // mc/anno — confini tra le fasce
+  const TARIFFE = [1.42241200, 1.78090500, 1.96593400, 2.19722100]; // €/mc per fascia
+  try {
+    const m = d.periodo.match(/Dal\s+(\d{2})\/(\d{2})\/(\d{4})\s+al\s+(\d{2})\/(\d{2})\/(\d{4})/i);
+    if (!m) return [];
+    const d1 = new Date(+m[3], +m[2]-1, +m[1]);
+    const d2 = new Date(+m[6], +m[5]-1, +m[4]);
+    const giorni = Math.round((d2 - d1) / 86400000) + 1;
+    const consumo = parseInt(d.consumo) || 0;
+    if (!consumo || !giorni) return [];
+    // Soglie proratizzate per il periodo di fatturazione
+    const soglie = SOGLIE.map(s => Math.round(s * giorni / 365));
+    const fasce = [];
+    let resto = consumo, prec = 0;
+    for (let i = 0; i <= soglie.length; i++) {
+      if (resto <= 0) break;
+      const limite = i < soglie.length ? soglie[i] : Infinity;
+      const ampiezza = limite === Infinity ? resto : limite - prec;
+      const mc = Math.min(resto, ampiezza);
+      if (mc > 0) {
+        const label = i === 0 ? `Fino a ${soglie[0]} mc`
+          : limite === Infinity ? `Oltre ${soglie[i-1]} mc`
+          : `Fino a ${soglie[i]} mc`;
+        fasce.push({ label, mc, tariffa: TARIFFE[i] });
+        resto -= mc;
+      }
+      if (limite !== Infinity) prec = limite;
     }
-  }
-  return fasce;
+    return fasce;
+  } catch(e) { return []; }
 }
 
 function trovaLettura(testo, tipo) {
@@ -342,7 +357,6 @@ function estrai(testo) {
     deposito:          trova(testo, 'Deposito cauzionale\\s+([\\d,.]+)'),
     quotaFissa:        trovaImporto(testo, 'Quota Fissa'),
     acquedotto:        trovaImporto(testo, 'Acquedotto'),
-    fasceAcquedotto:   trovaFasce(testo),
     fognatura:         trovaImporto(testo, 'Fognatura'),
     depurazione:       trovaImporto(testo, 'Depurazione'),
     oneri:             trovaImporto(testo, 'Oneri Perequazione'),
@@ -366,6 +380,7 @@ function estrai(testo) {
     lettAtt:           trovaLettura(testo, 'att'),
   };
   d.costoMedioMc = calcolaCostoMedio(testo, d);
+  d.fasceAcquedotto = calcolaFasceAcquedotto(d);
   return d;
 }
 
@@ -385,15 +400,8 @@ function mostraRisultato(d) {
   if (d.detrazioneAcconti !== '—') voci.push(['Detrazione Acconti (acconti già pagati)', d.detrazioneAcconti, true]);
   if (d.altrePartite !== '—') voci.push(['Altre Partite', d.altrePartite, false]);
 
-  const righeFasce = d.fasceAcquedotto.length > 0
-    ? d.fasceAcquedotto.map(f =>
-        `<tr class="fascia-row"><td style="padding-left:24px">↳ ${f.label} → <b>${f.mc} mc</b></td><td>€ ${f.importo}</td></tr>`
-      ).join('')
-    : '';
-
   const righeVoci = voci.map(([lbl, val, det]) => {
     let row = `<tr class="${det ? 'detrazione-row' : ''}"><td>${lbl}</td><td>€ ${val}</td></tr>`;
-    if (lbl === 'Acquedotto' && righeFasce) row += righeFasce;
     if (det) {
       row += `<tr class="detrazione-nota"><td colspan="2">ℹ️ Importi già fatturati in precedenza (acconti) ora stornati nel conguaglio. Il costo al metro cubo è calcolato al lordo, prima di questa detrazione. Il dettaglio è riportato nella sezione Info Bolletta.</td></tr>`;
     }
@@ -439,7 +447,15 @@ function mostraRisultato(d) {
         <div class="mc-sub">${d.isConguaglio ? 'Calcolato al lordo (prima delle detrazioni acconti)' : 'Totale imponibile ÷ consumo fatturato'}</div>
       </div>
       <div class="mc-val">${d.costoMedioMc} €/mc</div>
-    </div>` : ''}
+    </div>
+    ${d.fasceAcquedotto.length > 0 ? `
+    <div style="margin-top:10px;font-size:12px;color:var(--testo-light);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tariffe acquedotto per fascia</div>
+    <table class="importi-table" style="font-size:12px">
+      <tr style="background:#f0f6ff"><th style="text-align:left;padding:7px 12px;color:var(--blu);font-weight:600">Fascia</th><th style="text-align:center;padding:7px 12px;color:var(--blu);font-weight:600">mc consumati</th><th style="text-align:right;padding:7px 12px;color:var(--blu);font-weight:600">Tariffa €/mc</th></tr>
+      ${d.fasceAcquedotto.map(f => `<tr class="fascia-row"><td>${f.label}</td><td style="text-align:center;font-weight:700">${f.mc} mc</td><td style="text-align:right">${f.tariffa.toFixed(4).replace('.',',')} €/mc</td></tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--testo-light);margin-top:4px">* Soglie proratizzate sul periodo. Tariffe ARRICAL SII 2025 — uso domestico residente.</div>
+    ` : ''}` : ''}
 
     <!-- IMPORTI -->
     <div class="section-title">Dettaglio Importi</div>
