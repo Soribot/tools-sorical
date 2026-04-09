@@ -277,6 +277,26 @@ function calcolaCostoMedio(testo, dati) {
   return '—';
 }
 
+function trovaLettura(testo, tipo) {
+  // Cerca "Lettura Precedente" o "Lettura Attuale/Effettiva/Stimata"
+  let pattern;
+  if (tipo === 'prec') {
+    pattern = /Lettura\s+(?:Precedente|Inizio)[^\d]*(\d{2}\/\d{2}\/\d{4})[^\d]*(\d+)/i;
+  } else {
+    pattern = /Lettura\s+(?:Attuale|Effettiva|Stimata|Fine)[^\d]*(\d{2}\/\d{2}\/\d{4})[^\d]*(\d+)/i;
+  }
+  const m = testo.match(pattern);
+  if (m) return { data: m[1], valore: m[2] };
+  // fallback: cerca blocco "Letture e Consumi" e prende prima/seconda riga con data+numero
+  const blocco = testo.match(/Letture e Consumi(.+?)(?:Importi|Totale Imponibile)/is);
+  if (blocco) {
+    const righe = [...blocco[1].matchAll(/(\d{2}\/\d{2}\/\d{4})\s+(\d{4,})/g)];
+    const idx = tipo === 'prec' ? 0 : 1;
+    if (righe[idx]) return { data: righe[idx][1], valore: righe[idx][2] };
+  }
+  return null;
+}
+
 function estrai(testo) {
   const d = {
     numFattura:        trova(testo, 'Fattura num\\.\\s*(BOL/[\\d/]+)'),
@@ -305,6 +325,8 @@ function estrai(testo) {
     consMedio:         trova(testo, 'Cons\\.\\s*Medio\\s*Annuo[^:]*:\\s*(\\d+)\\s*mc'),
     tipologiaFatt:     trova(testo, 'Tipologia fatturazione\\s+([^\\n]{5,60})'),
     isConguaglio:      /Detrazione Acconti/i.test(testo),
+    lettPrec:          trovaLettura(testo, 'prec'),
+    lettAtt:           trovaLettura(testo, 'att'),
   };
   d.costoMedioMc = calcolaCostoMedio(testo, d);
   return d;
@@ -360,6 +382,8 @@ function mostraRisultato(d) {
       <div class="info-cell"><div class="lbl">Tipo utenza</div><div class="val">${d.tipoUtenza.trim()}</div></div>
       <div class="info-cell"><div class="lbl">Tipologia fatturazione</div><div class="val">${d.tipologiaFatt}</div></div>
       <div class="info-cell"><div class="lbl">Pagamenti precedenti</div><div class="val" style="color:${d.pagPrec==='Regolari'?'var(--verde)':'var(--rosso)'}">${d.pagPrec}</div></div>
+      ${d.lettPrec ? `<div class="info-cell"><div class="lbl">Lettura precedente</div><div class="val">${d.lettPrec.valore} mc <span style="color:var(--testo-light);font-size:11px">(${d.lettPrec.data})</span></div></div>` : ''}
+      ${d.lettAtt  ? `<div class="info-cell"><div class="lbl">Lettura attuale</div><div class="val">${d.lettAtt.valore} mc <span style="color:var(--testo-light);font-size:11px">(${d.lettAtt.data})</span></div></div>` : ''}
     </div>
 
     <!-- COSTO MC -->
