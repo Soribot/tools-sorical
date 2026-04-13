@@ -1153,101 +1153,181 @@ function mascheraRosso(file) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PARSER EML
+// PARSER EML (lettura binaria + gestione charset)
 // ─────────────────────────────────────────────────────────────
+function latin1ToStr(buf) {
+  // Converte ArrayBuffer/Uint8Array in stringa Latin-1 (preserva tutti i byte)
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  const CHUNK = 8192;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    s += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
+  }
+  return s;
+}
+
+function decodeUtf8(str) {
+  // Decodifica una stringa Latin-1 che contiene byte UTF-8
+  try { return decodeURIComponent(escape(str)); } catch(e) { return str; }
+}
+
 function decodeRFC2047(str) {
   if (!str) return '';
-  return str.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (m, charset, enc, text) => {
+  return str.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (match, charset, enc, text) => {
     try {
+      let decoded;
       if (enc.toUpperCase() === 'B') {
-        const bytes = atob(text); let s = '';
-        for (let i = 0; i < bytes.length; i++) s += bytes.charCodeAt(i) < 128 ? bytes[i] : '?';
-        return s;
+        decoded = atob(text);
       } else {
-        return text.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+        decoded = text.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, h) =>
+          String.fromCharCode(parseInt(h, 16)));
       }
-    } catch(e) { return m; }
+      if (charset.toLowerCase().includes('utf-8')) return decodeUtf8(decoded);
+      return decoded;
+    } catch (e) { return match; }
   });
 }
 
-function decodeBodyPart(body, encoding, contentType) {
+function getCharset(contentType) {
+  const m = (contentType || '').match(/charset=["']?([^"';\s]+)/i);
+  return m ? m[1].toLowerCase().replace(/^(x-)?/, '') : '';
+}
+
+function decodeTransferEncoding(body, encoding) {
   const enc = (encoding || '').toLowerCase().trim();
-  let decoded = body;
   if (enc === 'base64') {
-    try { decoded = atob(body.replace(/\s/g, '')); } catch(e) { decoded = body; }
-  } else if (enc === 'quoted-printable') {
-    decoded = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    try { return atob(body.replace(/[\s\r\n]/g, '')); } catch(e) { return body; }
   }
+  if (enc === 'quoted-printable') {
+    return body.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
+      String.fromCharCode(parseInt(h, 16)));
+  }
+  return body;
+}
+
+function decodeTextPart(body, encoding, contentType) {
+  let decoded = decodeTransferEncoding(body, encoding);
+  // Applica charset
+  const cs = getCharset(contentType);
+  if (cs.includes('utf-8') || cs.includes('utf8')) decoded = decodeUtf8(decoded);
+  // Se HTML, converti a testo
   if ((contentType || '').toLowerCase().includes('text/html')) {
     decoded = decoded
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/\s{2,}/g, ' ').trim();
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, '\n\n').trim();
   }
   return decoded;
 }
 
 function escRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-function parseMIMEParts(body, boundary, result) {
-  const parts = body.split(new RegExp('\r?\n?--' + escRx(boundary) + '(?:--)?(?:\r?\n|$)'));
-  for (const part of parts) {
-    if (!part.trim()) continue;
-    const sep = part.search(/\r?\n\r?\n/);
-    if (sep === -1) continue;
-    const hdrBlock = part.substring(0, sep).replace(/\r?\n[ \t]+/g, ' ');
-    const partBody = part.substring(sep).replace(/^\r?\n/, '').replace(/\r?\n$/, '');
-    const hdrs = {};
-    for (const line of hdrBlock.split(/\r?\n/)) {
-      const c = line.indexOf(':');
-      if (c > 0) hdrs[line.substring(0, c).trim().toLowerCase()] = line.substring(c+1).trim();
+function extractBoundary(contentType) {
+  const m = contentType.match(/boundary=["']?(.+?)["']?\s*(?:;|$)/i);
+  return m ? m[1].trim() : null;
+}
+
+function parseHeaders(block) {
+  // Unfold continuation lines e parse headers
+  const unfolded = block.replace(/\r?\n([ \t]+)/g, ' ');
+  const hdrs = {};
+  for (const line of unfolded.split(/\r?\n/)) {
+    const c = line.indexOf(':');
+    if (c > 0) {
+      const key = line.substring(0, c).trim().toLowerCase();
+      hdrs[key] = line.substring(c + 1).trim();
     }
+  }
+  return hdrs;
+}
+
+function parseMIMEParts(rawBody, boundary, result) {
+  // Splitta per boundary
+  const delim = '--' + boundary;
+  const endDelim = delim + '--';
+  // Trova tutte le posizioni dei boundary
+  const parts = [];
+  let idx = rawBody.indexOf(delim);
+  while (idx !== -1) {
+    // Controlla se è il boundary finale
+    const afterBound = rawBody.substring(idx + delim.length);
+    if (afterBound.startsWith('--')) break; // End boundary
+    // Trova il prossimo boundary
+    const nextIdx = rawBody.indexOf('\n' + delim, idx + delim.length);
+    const endIdx = nextIdx === -1 ? rawBody.length : nextIdx;
+    // Il contenuto della parte inizia dopo la prima \n dopo il boundary
+    const partStart = rawBody.indexOf('\n', idx + delim.length);
+    if (partStart !== -1 && partStart < endIdx) {
+      parts.push(rawBody.substring(partStart + 1, endIdx));
+    }
+    idx = nextIdx === -1 ? -1 : nextIdx + 1;
+  }
+
+  for (const part of parts) {
+    const trimmed = part.replace(/^\r?\n/, '');
+    // Separa header dal corpo
+    const sepMatch = trimmed.match(/\r?\n\r?\n/);
+    if (!sepMatch) continue;
+    const sepIdx = trimmed.indexOf(sepMatch[0]);
+    const hdrBlock = trimmed.substring(0, sepIdx);
+    const partBody = trimmed.substring(sepIdx + sepMatch[0].length);
+
+    const hdrs = parseHeaders(hdrBlock);
     const ct = hdrs['content-type'] || '';
     const ce = hdrs['content-transfer-encoding'] || '';
     const cd = hdrs['content-disposition'] || '';
     const ctLow = ct.toLowerCase();
 
     if (ctLow.includes('multipart')) {
-      const bm = ct.match(/boundary=["']?([^"';\r\n]+)["']?/i);
-      if (bm) parseMIMEParts(partBody, bm[1].trim(), result);
-    } else if (ctLow.startsWith('text/plain') && !cd.includes('attachment')) {
-      const dec = decodeBodyPart(partBody, ce, ct).trim();
+      const b = extractBoundary(ct);
+      if (b) parseMIMEParts(partBody, b, result);
+    } else if (ctLow.startsWith('text/plain') && !cd.toLowerCase().includes('attachment')) {
+      const dec = decodeTextPart(partBody, ce, ct).trim();
       if (dec) result.body = result.body ? result.body + '\n\n' + dec : dec;
-    } else if (ctLow.startsWith('text/html') && !cd.includes('attachment') && !result.body) {
-      const dec = decodeBodyPart(partBody, ce, ct).trim();
+    } else if (ctLow.startsWith('text/html') && !cd.toLowerCase().includes('attachment') && !result.body) {
+      const dec = decodeTextPart(partBody, ce, ct).trim();
       if (dec) result.body = dec;
-    } else if (ctLow.startsWith('image/') || (ce.toLowerCase() === 'base64' && ct)) {
+    } else if (ce.toLowerCase().trim() === 'base64' || cd.toLowerCase().includes('attachment')) {
+      // Allegato (immagine, PDF, ecc.)
       const nm = ct.match(/name=["']?([^"';\r\n]+)["']?/i) || cd.match(/filename=["']?([^"';\r\n]+)["']?/i);
-      const name = nm ? decodeRFC2047(nm[1].trim()) : 'allegato';
+      let name = nm ? nm[1].trim() : 'allegato';
+      name = decodeRFC2047(name);
       const mime = ct.split(';')[0].trim() || 'application/octet-stream';
-      if (ce.toLowerCase() === 'base64') {
-        result.attachments.push({ name, mimeType: mime, data: partBody.replace(/\s/g, '') });
+      const b64 = partBody.replace(/[\s\r\n]/g, '');
+      if (b64.length > 10) {
+        result.attachments.push({ name, mimeType: mime, data: b64 });
       }
     }
   }
 }
 
-function parseEML(emlText) {
-  const text = emlText.replace(/\r\n/g, '\n');
-  const result = { subject: '', from: '', body: '', attachments: [] };
-  const hEnd = text.indexOf('\n\n');
-  if (hEnd === -1) return result;
-  const hBlock = text.substring(0, hEnd).replace(/\n[ \t]+/g, ' ');
-  const bodySection = text.substring(hEnd + 2);
-  const hdrs = {};
-  for (const line of hBlock.split('\n')) {
-    const c = line.indexOf(':');
-    if (c > 0) hdrs[line.substring(0, c).trim().toLowerCase()] = line.substring(c+1).trim();
-  }
+function parseEML(rawText) {
+  const result = { subject: '', from: '', date: '', body: '', attachments: [] };
+
+  // Separa header globali dal corpo
+  const sepMatch = rawText.match(/\r?\n\r?\n/);
+  if (!sepMatch) return result;
+  const sepIdx = rawText.indexOf(sepMatch[0]);
+  const hdrBlock = rawText.substring(0, sepIdx);
+  const bodySection = rawText.substring(sepIdx + sepMatch[0].length);
+
+  const hdrs = parseHeaders(hdrBlock);
   result.subject = decodeRFC2047(hdrs['subject'] || '');
-  result.from = hdrs['from'] || '';
+  result.from = decodeRFC2047(hdrs['from'] || '');
+  result.date = hdrs['date'] || '';
+
   const ct = hdrs['content-type'] || '';
   if (ct.toLowerCase().includes('multipart')) {
-    const bm = ct.match(/boundary=["']?([^"';\r\n]+)["']?/i);
-    if (bm) parseMIMEParts(bodySection, bm[1].trim(), result);
+    const b = extractBoundary(ct);
+    if (b) parseMIMEParts(bodySection, b, result);
   } else {
-    result.body = decodeBodyPart(bodySection, hdrs['content-transfer-encoding'] || '', ct);
+    result.body = decodeTextPart(bodySection, hdrs['content-transfer-encoding'] || '', ct);
   }
   return result;
 }
@@ -1263,70 +1343,89 @@ function handleEML(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const parsed = parseEML(ev.target.result);
+    // Legge come ArrayBuffer e converte in Latin-1 per preservare tutti i byte
+    const raw = latin1ToStr(ev.target.result);
+    const parsed = parseEML(raw);
+
+    // Info parsing
+    const nAllegati = parsed.attachments.length;
+    const nImg = parsed.attachments.filter(a => a.mimeType.startsWith('image/')).length;
 
     // Corpo email → textarea reclamo
     if (parsed.body) {
       const pulito = parsed.body.replace(/\n{3,}/g, '\n\n').trim();
-      const prefisso = parsed.subject ? `[Oggetto: ${parsed.subject}]\n\n` : '';
+      let prefisso = '';
+      if (parsed.subject) prefisso += `[Oggetto: ${parsed.subject}]\n`;
+      if (parsed.from) prefisso += `[Da: ${parsed.from}]\n`;
+      if (parsed.date) prefisso += `[Data: ${parsed.date}]\n`;
+      if (prefisso) prefisso += '\n';
       document.getElementById('testo-reclamo').value = prefisso + pulito;
       document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
+    } else {
+      // Se non c'è body ma ci sono allegati, segnala
+      document.getElementById('testo-reclamo').value =
+        `[Email: ${parsed.subject || '(senza oggetto)'}]\n[Da: ${parsed.from}]\n\n(Testo email vuoto — verificare allegati)`;
     }
 
-    // Allegati immagine
+    // Allegati
     const allegatiDiv = document.getElementById('eml-allegati');
     const allegatiList = document.getElementById('eml-allegati-list');
     allegatiList.innerHTML = '';
 
-    const imgAllegati = parsed.attachments.filter(a => a.mimeType.startsWith('image/'));
-    if (imgAllegati.length > 0) {
+    if (nAllegati > 0) {
       const hdr = document.createElement('div');
       hdr.className = 'allegati-header';
-      hdr.textContent = `📎 ${imgAllegati.length} immagine/i allegate — seleziona quella del contatore per estrarre la lettura:`;
+      hdr.textContent = nImg > 0
+        ? `📎 ${nAllegati} allegato/i (${nImg} immagine/i) — seleziona per analizzare:`
+        : `📎 ${nAllegati} allegato/i trovato/i:`;
       allegatiList.appendChild(hdr);
 
       const grid = document.createElement('div');
       grid.className = 'allegati-grid';
 
-      imgAllegati.forEach(att => {
+      parsed.attachments.forEach(att => {
         const item = document.createElement('div');
         item.className = 'allegato-item';
 
-        const img = document.createElement('img');
-        img.src = `data:${att.mimeType};base64,${att.data}`;
-        img.className = 'allegato-thumb';
+        if (att.mimeType.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = `data:${att.mimeType};base64,${att.data}`;
+          img.className = 'allegato-thumb';
+          item.appendChild(img);
+        } else {
+          const icon = document.createElement('div');
+          icon.style.cssText = 'font-size:2.5rem;padding:10px 0;';
+          icon.textContent = att.mimeType.includes('pdf') ? '📄' : '📎';
+          item.appendChild(icon);
+        }
 
         const lbl = document.createElement('div');
         lbl.className = 'allegato-name';
-        lbl.title = att.name;
+        lbl.title = `${att.name} (${att.mimeType}) — ${Math.round(att.data.length * 3/4/1024)} KB`;
         lbl.textContent = att.name;
+        item.appendChild(lbl);
 
-        const btn = document.createElement('button');
-        btn.className = 'btn-ocr-allegato';
-        btn.textContent = '📷 Analizza contatore';
-        btn.onclick = () => {
-          document.querySelectorAll('.btn-ocr-allegato').forEach(b => b.classList.remove('attivo'));
-          btn.classList.add('attivo');
-          btn.textContent = '⏳ Analisi…';
-          analizzaAllegato(att, btn);
-        };
+        if (att.mimeType.startsWith('image/')) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-ocr-allegato';
+          btn.textContent = '📷 Analizza contatore';
+          btn.onclick = () => {
+            document.querySelectorAll('.btn-ocr-allegato').forEach(b => { b.classList.remove('attivo'); b.textContent = '📷 Analizza contatore'; });
+            btn.classList.add('attivo');
+            btn.textContent = '⏳ Analisi…';
+            analizzaAllegato(att, btn);
+          };
+          item.appendChild(btn);
+        }
 
-        item.appendChild(img); item.appendChild(lbl); item.appendChild(btn);
         grid.appendChild(item);
       });
 
       allegatiList.appendChild(grid);
       allegatiDiv.style.display = 'block';
-    } else if (parsed.attachments.length > 0) {
-      // Allegati non-immagine
-      const hdr = document.createElement('div');
-      hdr.className = 'allegati-header';
-      hdr.textContent = `📎 ${parsed.attachments.length} allegato/i non-immagine trovato/i (PDF o altro — non analizzabili automaticamente).`;
-      allegatiList.appendChild(hdr);
-      allegatiDiv.style.display = 'block';
     }
   };
-  reader.readAsText(file, 'utf-8');
+  reader.readAsArrayBuffer(file); // Lettura binaria — no corruzione charset
 }
 
 async function analizzaAllegato(att, btn) {
