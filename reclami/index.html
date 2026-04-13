@@ -570,10 +570,18 @@ function elaboraReclamo() {
 
   const lettura = document.getElementById('lettura-contatore').value.trim();
 
-  const risposta = info.risposta({
+  let risposta = info.risposta({
     testo, nome, dataReclamo: dataReclamoStr, dataOggi, prot, contratto, lettura,
     norme: info.norme, standard: info.standard, label: info.label
   });
+
+  // Inserisce la lettura in TUTTE le categorie se presente e non già inclusa
+  if (lettura) {
+    const rigaL = `LETTURA CONTATORE COMUNICATA DALL'UTENTE: ${lettura} m³`;
+    if (!risposta.includes(rigaL)) {
+      risposta = risposta.replace(/(\nESITO[^\n]*\n)/, `$1${rigaL}\n`);
+    }
+  }
 
   document.getElementById('output-area').value = risposta;
 }
@@ -650,12 +658,9 @@ AZIONE RICHIESTA: Per una più celere risoluzione della problematica, si invita 
 }
 
 function elaboraConguaglio(d) {
-  const rigaLettura = d.lettura
-    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n`
-    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
-${rigaLettura}
+
 In riscontro alla segnalazione relativa al conguaglio/consumo anomalo contestato, si comunica quanto segue.
 
 SORICAL S.p.A. ha verificato quanto esposto e informa l'Utente che:
@@ -673,12 +678,9 @@ Si sta procedendo alla verifica della cronologia delle letture. L'esito sarà co
 }
 
 function elaboraPerditaOcculta(d) {
-  const rigaLettura = d.lettura
-    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n(Indicativa del consumo rilevato — da confrontare con storico letture per calcolo eccedenza)\n`
-    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
-${rigaLettura}
+
 In merito alla richiesta di rettifica bolletta per perdita occulta, si comunicano le condizioni di accesso alla tutela prevista dalla normativa vigente.
 
 NORMATIVA APPLICABILE: Del. ARERA 609/2021/R/IDR del 21/12/2021 (modificativa della Del. ARERA 218/2016/R/IDR) e art. 4.4.2 della Carta dei Servizi SORICAL.
@@ -831,12 +833,9 @@ Si sta verificando lo stato della pratica.
 }
 
 function elaboraMisuratore(d) {
-  const rigaLettura = d.lettura
-    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n(Lettura rilevata da immagine fornita — da riscontrare con verifica tecnica in loco)\n`
-    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
-${rigaLettura}
+
 In riscontro alla richiesta di verifica/sostituzione del misuratore, si comunica quanto segue.
 
 NORMATIVA: Art. 29-32 All. A Del. ARERA 655/2015/R/IDR, Del. ARERA 547/2019/R/IDR, D.M. 93/2017, Carta dei Servizi SORICAL § 4.4.11-4.4.12.
@@ -1348,16 +1347,21 @@ async function analizzaAllegato(att, btn) {
 }
 
 function estraiLettura(testo) {
-  // Rimuovi spazi multipli e normalizza
-  const t = testo.replace(/\s+/g, ' ').trim();
-  // Cerca prima letture con decimali (formato contatore: 5-8 cifre + punto/virgola + 1-3 cifre)
-  const conDecimali = [...t.matchAll(/\b(\d{3,8}[.,]\d{1,3})\b/g)].map(m => m[1]);
+  // OCR può separare cifre con spazi (es. "1 2 3 4 5" → "12345")
+  // Collassa spazi tra cifre (3 passate per casi tipo "1 2 3")
+  let t = testo;
+  for (let i = 0; i < 4; i++) t = t.replace(/(\d) (\d)/g, '$1$2');
+  // Normalizza anche punto/virgola preceduti/seguiti da spazio
+  t = t.replace(/(\d) ([.,]) (\d)/g, '$1$2$3').replace(/(\d) ([.,])(\d)/g, '$1$2$3').replace(/(\d)([.,]) (\d)/g, '$1$2$3');
+  t = t.replace(/\s+/g, ' ').trim();
+
+  // 1. Con decimali: 3-8 cifre + separatore + 1-3 cifre
+  const conDecimali = [...t.matchAll(/(\d{3,8}[.,]\d{1,3})/g)].map(m => m[1]);
   if (conDecimali.length > 0) {
-    // Prendi il numero più lungo
     return conDecimali.sort((a, b) => b.length - a.length)[0];
   }
-  // Poi cerca numeri interi da 4 a 8 cifre (lettura senza decimali)
-  const interi = [...t.matchAll(/\b(\d{4,8})\b/g)].map(m => m[1]);
+  // 2. Senza decimali: 4-8 cifre consecutive
+  const interi = [...t.matchAll(/(\d{4,8})/g)].map(m => m[1]);
   if (interi.length > 0) {
     return interi.sort((a, b) => b.length - a.length)[0];
   }
@@ -1406,7 +1410,7 @@ async function handleFile(file) {
     document.getElementById('thumb-wrap').style.display = 'block';
   }
 
-  Tesseract.recognize(fileOCR, lang, {
+  return Tesseract.recognize(fileOCR, lang, {
     logger: m => {
       if (m.status === 'recognizing text') {
         const pct = Math.round(m.progress * 100);
