@@ -182,6 +182,32 @@
 
   .thumb-wrap { display:none; margin-bottom:10px; text-align:center; }
   .thumb-wrap img { max-height:130px; border-radius:6px; border:1px solid #c8d6e5; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+
+  .modo-contatore-row { margin-bottom: 10px; }
+  .modo-contatore-row label { display:flex; align-items:center; gap:8px; font-size:.88rem; color:#444; cursor:pointer; user-select:none; }
+  .modo-contatore-row input[type=checkbox] { width:16px; height:16px; accent-color:#003580; cursor:pointer; }
+
+  .lettura-box { display:none; background:#f0fff4; border:2px solid #38a169; border-radius:8px; padding:12px 14px; margin-bottom:12px; }
+  .lettura-box.show { display:block; }
+  .lettura-box .lb-label { font-size:.8rem; color:#276749; font-weight:700; margin-bottom:6px; }
+  .lettura-box .lb-input { font-size:1.5rem; font-weight:700; color:#276749; font-family:'Courier New',monospace; letter-spacing:2px; border:1.5px solid #9ae6b4; border-radius:6px; padding:6px 12px; width:100%; background:white; }
+  .lettura-box .lb-input:focus { outline:none; border-color:#38a169; }
+  .lettura-box .lb-tip { font-size:.75rem; color:#68a07a; margin-top:4px; }
+
+  /* EML allegati */
+  .eml-sep { margin:10px 0; text-align:center; color:#bbb; font-size:.8rem; font-style:italic; position:relative; }
+  .eml-sep::before, .eml-sep::after { content:''; position:absolute; top:50%; width:42%; height:1px; background:#dde; }
+  .eml-sep::before { left:0; } .eml-sep::after { right:0; }
+
+  #eml-allegati { background:#f7faff; border:1.5px solid #c8d6e5; border-radius:8px; padding:12px; margin-bottom:10px; }
+  .allegati-header { font-size:.83rem; color:#444; margin-bottom:8px; font-weight:600; }
+  .allegati-grid { display:flex; flex-wrap:wrap; gap:10px; }
+  .allegato-item { width:140px; text-align:center; }
+  .allegato-thumb { width:130px; height:90px; object-fit:cover; border-radius:6px; border:2px solid #c8d6e5; display:block; margin:0 auto; }
+  .allegato-name { font-size:.7rem; color:#555; margin:4px 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn-ocr-allegato { font-size:.74rem; background:#003580; color:white; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; width:100%; }
+  .btn-ocr-allegato:hover { background:#0050b3; }
+  .btn-ocr-allegato.attivo { background:#276749; }
 </style>
 </head>
 <body>
@@ -223,6 +249,14 @@
             <input type="text" id="contratto" placeholder="es. CZ-00001234">
           </label>
         </div>
+        <!-- MODALITÀ CONTATORE -->
+        <div class="modo-contatore-row">
+          <label>
+            <input type="checkbox" id="modo-contatore">
+            📷 Modalità contatore — carica foto del contatore e rileva la lettura automaticamente
+          </label>
+        </div>
+
         <!-- UPLOAD IMMAGINE -->
         <div class="upload-zone" id="upload-zone"
              ondragover="event.preventDefault();this.classList.add('drag')"
@@ -234,9 +268,34 @@
           <div class="uz-sub">oppure trascina qui il file — il testo verrà estratto automaticamente</div>
         </div>
 
+        <!-- SEPARATORE + UPLOAD EML -->
+        <div class="eml-sep">oppure carica un'email</div>
+
+        <div class="upload-zone" id="eml-upload-zone"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="handleEMLDrop(event)">
+          <input type="file" id="eml-input" accept=".eml,message/rfc822" onchange="handleEML(this.files[0])">
+          <div class="uz-icon">📧</div>
+          <div class="uz-label">Carica file email (.eml) con allegati</div>
+          <div class="uz-sub">Estrae testo del reclamo e immagini allegate (es. foto contatori)</div>
+        </div>
+
+        <!-- ALLEGATI EMAIL -->
+        <div id="eml-allegati" style="display:none;">
+          <div id="eml-allegati-list"></div>
+        </div>
+
         <!-- ANTEPRIMA IMMAGINE -->
         <div class="thumb-wrap" id="thumb-wrap">
           <img id="thumb-img" src="" alt="anteprima">
+        </div>
+
+        <!-- LETTURA CONTATORE RILEVATA -->
+        <div class="lettura-box" id="lettura-box">
+          <div class="lb-label">Lettura contatore rilevata (m³) — verifica e correggi se necessario:</div>
+          <input type="text" id="lettura-contatore" class="lb-input" placeholder="es. 00345.789">
+          <div class="lb-tip">Questa lettura verrà inserita automaticamente nella risposta al reclamo.</div>
         </div>
 
         <!-- BARRA AVANZAMENTO OCR -->
@@ -509,8 +568,10 @@ function elaboraReclamo() {
     ? new Date(dataReclamo).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})
     : '[data reclamo]';
 
+  const lettura = document.getElementById('lettura-contatore').value.trim();
+
   const risposta = info.risposta({
-    testo, nome, dataReclamo: dataReclamoStr, dataOggi, prot, contratto,
+    testo, nome, dataReclamo: dataReclamoStr, dataOggi, prot, contratto, lettura,
     norme: info.norme, standard: info.standard, label: info.label
   });
 
@@ -589,9 +650,12 @@ AZIONE RICHIESTA: Per una più celere risoluzione della problematica, si invita 
 }
 
 function elaboraConguaglio(d) {
+  const rigaLettura = d.lettura
+    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n`
+    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
-
+${rigaLettura}
 In riscontro alla segnalazione relativa al conguaglio/consumo anomalo contestato, si comunica quanto segue.
 
 SORICAL S.p.A. ha verificato quanto esposto e informa l'Utente che:
@@ -609,9 +673,12 @@ Si sta procedendo alla verifica della cronologia delle letture. L'esito sarà co
 }
 
 function elaboraPerditaOcculta(d) {
+  const rigaLettura = d.lettura
+    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n(Indicativa del consumo rilevato — da confrontare con storico letture per calcolo eccedenza)\n`
+    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
-
+${rigaLettura}
 In merito alla richiesta di rettifica bolletta per perdita occulta, si comunicano le condizioni di accesso alla tutela prevista dalla normativa vigente.
 
 NORMATIVA APPLICABILE: Del. ARERA 609/2021/R/IDR del 21/12/2021 (modificativa della Del. ARERA 218/2016/R/IDR) e art. 4.4.2 della Carta dei Servizi SORICAL.
@@ -764,9 +831,12 @@ Si sta verificando lo stato della pratica.
 }
 
 function elaboraMisuratore(d) {
+  const rigaLettura = d.lettura
+    ? `\nLETTURA CONTATORE COMUNICATA DALL'UTENTE: ${d.lettura} m³\n(Lettura rilevata da immagine fornita — da riscontrare con verifica tecnica in loco)\n`
+    : '';
   return intestazione(d) + `
 ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
-
+${rigaLettura}
 In riscontro alla richiesta di verifica/sostituzione del misuratore, si comunica quanto segue.
 
 NORMATIVA: Art. 29-32 All. A Del. ARERA 655/2015/R/IDR, Del. ARERA 547/2019/R/IDR, D.M. 93/2017, Carta dei Servizi SORICAL § 4.4.11-4.4.12.
@@ -1007,6 +1077,8 @@ function pulisciTutto() {
   document.getElementById('protocollo').value = '';
   document.getElementById('contratto').value = '';
   document.getElementById('data-reclamo').value = '';
+  document.getElementById('lettura-contatore').value = '';
+  document.getElementById('lettura-box').classList.remove('show');
   document.getElementById('cat-select').value = 'auto';
   document.getElementById('categoria-info').innerHTML = '<em style="color:#aaa">La categoria verrà rilevata automaticamente dopo aver incollato il testo.</em>';
   document.getElementById('norma-box').style.display = 'none';
@@ -1025,8 +1097,277 @@ function handleDrop(e) {
   if (f) handleFile(f);
 }
 
-function handleFile(file) {
+// ─────────────────────────────────────────────────────────────
+// PREPROCESSING IMMAGINE: maschera pixel rossi (decimali contatore)
+// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// SUONO DI NOTIFICA (Web Audio API — nessun file esterno)
+// ─────────────────────────────────────────────────────────────
+function suonaNotifica() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880, 0, 0.12], [1100, 0.13, 0.12], [1320, 0.26, 0.18]].forEach(([freq, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + start + 0.02);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) {}
+}
+
+function mascheraRosso(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      let nRossi = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // Rosso dominante: R alto, G e B bassi, R almeno 1.8x G e 1.8x B
+        if (r > 130 && g < 110 && b < 110 && r > g * 1.8 && r > b * 1.8) {
+          d[i] = 255; d[i+1] = 255; d[i+2] = 255; // → bianco
+          nRossi++;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      canvas.toBlob(blob => {
+        URL.revokeObjectURL(url);
+        resolve({ blob, nRossi });
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve({ blob: file, nRossi: 0 }); };
+    img.src = url;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// PARSER EML
+// ─────────────────────────────────────────────────────────────
+function decodeRFC2047(str) {
+  if (!str) return '';
+  return str.replace(/=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi, (m, charset, enc, text) => {
+    try {
+      if (enc.toUpperCase() === 'B') {
+        const bytes = atob(text); let s = '';
+        for (let i = 0; i < bytes.length; i++) s += bytes.charCodeAt(i) < 128 ? bytes[i] : '?';
+        return s;
+      } else {
+        return text.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+      }
+    } catch(e) { return m; }
+  });
+}
+
+function decodeBodyPart(body, encoding, contentType) {
+  const enc = (encoding || '').toLowerCase().trim();
+  let decoded = body;
+  if (enc === 'base64') {
+    try { decoded = atob(body.replace(/\s/g, '')); } catch(e) { decoded = body; }
+  } else if (enc === 'quoted-printable') {
+    decoded = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  }
+  if ((contentType || '').toLowerCase().includes('text/html')) {
+    decoded = decoded
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/\s{2,}/g, ' ').trim();
+  }
+  return decoded;
+}
+
+function escRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function parseMIMEParts(body, boundary, result) {
+  const parts = body.split(new RegExp('\r?\n?--' + escRx(boundary) + '(?:--)?(?:\r?\n|$)'));
+  for (const part of parts) {
+    if (!part.trim()) continue;
+    const sep = part.search(/\r?\n\r?\n/);
+    if (sep === -1) continue;
+    const hdrBlock = part.substring(0, sep).replace(/\r?\n[ \t]+/g, ' ');
+    const partBody = part.substring(sep).replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+    const hdrs = {};
+    for (const line of hdrBlock.split(/\r?\n/)) {
+      const c = line.indexOf(':');
+      if (c > 0) hdrs[line.substring(0, c).trim().toLowerCase()] = line.substring(c+1).trim();
+    }
+    const ct = hdrs['content-type'] || '';
+    const ce = hdrs['content-transfer-encoding'] || '';
+    const cd = hdrs['content-disposition'] || '';
+    const ctLow = ct.toLowerCase();
+
+    if (ctLow.includes('multipart')) {
+      const bm = ct.match(/boundary=["']?([^"';\r\n]+)["']?/i);
+      if (bm) parseMIMEParts(partBody, bm[1].trim(), result);
+    } else if (ctLow.startsWith('text/plain') && !cd.includes('attachment')) {
+      const dec = decodeBodyPart(partBody, ce, ct).trim();
+      if (dec) result.body = result.body ? result.body + '\n\n' + dec : dec;
+    } else if (ctLow.startsWith('text/html') && !cd.includes('attachment') && !result.body) {
+      const dec = decodeBodyPart(partBody, ce, ct).trim();
+      if (dec) result.body = dec;
+    } else if (ctLow.startsWith('image/') || (ce.toLowerCase() === 'base64' && ct)) {
+      const nm = ct.match(/name=["']?([^"';\r\n]+)["']?/i) || cd.match(/filename=["']?([^"';\r\n]+)["']?/i);
+      const name = nm ? decodeRFC2047(nm[1].trim()) : 'allegato';
+      const mime = ct.split(';')[0].trim() || 'application/octet-stream';
+      if (ce.toLowerCase() === 'base64') {
+        result.attachments.push({ name, mimeType: mime, data: partBody.replace(/\s/g, '') });
+      }
+    }
+  }
+}
+
+function parseEML(emlText) {
+  const text = emlText.replace(/\r\n/g, '\n');
+  const result = { subject: '', from: '', body: '', attachments: [] };
+  const hEnd = text.indexOf('\n\n');
+  if (hEnd === -1) return result;
+  const hBlock = text.substring(0, hEnd).replace(/\n[ \t]+/g, ' ');
+  const bodySection = text.substring(hEnd + 2);
+  const hdrs = {};
+  for (const line of hBlock.split('\n')) {
+    const c = line.indexOf(':');
+    if (c > 0) hdrs[line.substring(0, c).trim().toLowerCase()] = line.substring(c+1).trim();
+  }
+  result.subject = decodeRFC2047(hdrs['subject'] || '');
+  result.from = hdrs['from'] || '';
+  const ct = hdrs['content-type'] || '';
+  if (ct.toLowerCase().includes('multipart')) {
+    const bm = ct.match(/boundary=["']?([^"';\r\n]+)["']?/i);
+    if (bm) parseMIMEParts(bodySection, bm[1].trim(), result);
+  } else {
+    result.body = decodeBodyPart(bodySection, hdrs['content-transfer-encoding'] || '', ct);
+  }
+  return result;
+}
+
+function handleEMLDrop(e) {
+  e.preventDefault();
+  document.getElementById('eml-upload-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) handleEML(f);
+}
+
+function handleEML(file) {
   if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const parsed = parseEML(ev.target.result);
+
+    // Corpo email → textarea reclamo
+    if (parsed.body) {
+      const pulito = parsed.body.replace(/\n{3,}/g, '\n\n').trim();
+      const prefisso = parsed.subject ? `[Oggetto: ${parsed.subject}]\n\n` : '';
+      document.getElementById('testo-reclamo').value = prefisso + pulito;
+      document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
+    }
+
+    // Allegati immagine
+    const allegatiDiv = document.getElementById('eml-allegati');
+    const allegatiList = document.getElementById('eml-allegati-list');
+    allegatiList.innerHTML = '';
+
+    const imgAllegati = parsed.attachments.filter(a => a.mimeType.startsWith('image/'));
+    if (imgAllegati.length > 0) {
+      const hdr = document.createElement('div');
+      hdr.className = 'allegati-header';
+      hdr.textContent = `📎 ${imgAllegati.length} immagine/i allegate — seleziona quella del contatore per estrarre la lettura:`;
+      allegatiList.appendChild(hdr);
+
+      const grid = document.createElement('div');
+      grid.className = 'allegati-grid';
+
+      imgAllegati.forEach(att => {
+        const item = document.createElement('div');
+        item.className = 'allegato-item';
+
+        const img = document.createElement('img');
+        img.src = `data:${att.mimeType};base64,${att.data}`;
+        img.className = 'allegato-thumb';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'allegato-name';
+        lbl.title = att.name;
+        lbl.textContent = att.name;
+
+        const btn = document.createElement('button');
+        btn.className = 'btn-ocr-allegato';
+        btn.textContent = '📷 Analizza contatore';
+        btn.onclick = () => {
+          document.querySelectorAll('.btn-ocr-allegato').forEach(b => b.classList.remove('attivo'));
+          btn.classList.add('attivo');
+          btn.textContent = '⏳ Analisi…';
+          analizzaAllegato(att, btn);
+        };
+
+        item.appendChild(img); item.appendChild(lbl); item.appendChild(btn);
+        grid.appendChild(item);
+      });
+
+      allegatiList.appendChild(grid);
+      allegatiDiv.style.display = 'block';
+    } else if (parsed.attachments.length > 0) {
+      // Allegati non-immagine
+      const hdr = document.createElement('div');
+      hdr.className = 'allegati-header';
+      hdr.textContent = `📎 ${parsed.attachments.length} allegato/i non-immagine trovato/i (PDF o altro — non analizzabili automaticamente).`;
+      allegatiList.appendChild(hdr);
+      allegatiDiv.style.display = 'block';
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+async function analizzaAllegato(att, btn) {
+  // Converti base64 → Blob
+  const bytes = atob(att.data);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  const blob = new Blob([arr], { type: att.mimeType });
+
+  // Mostra anteprima
+  document.getElementById('thumb-img').src = `data:${att.mimeType};base64,${att.data}`;
+  document.getElementById('thumb-wrap').style.display = 'block';
+
+  // Forza modalità contatore e avvia OCR
+  document.getElementById('modo-contatore').checked = true;
+  await handleFile(blob);
+  if (btn) { btn.textContent = '✔ Analizzata'; btn.classList.add('attivo'); }
+}
+
+function estraiLettura(testo) {
+  // Rimuovi spazi multipli e normalizza
+  const t = testo.replace(/\s+/g, ' ').trim();
+  // Cerca prima letture con decimali (formato contatore: 5-8 cifre + punto/virgola + 1-3 cifre)
+  const conDecimali = [...t.matchAll(/\b(\d{3,8}[.,]\d{1,3})\b/g)].map(m => m[1]);
+  if (conDecimali.length > 0) {
+    // Prendi il numero più lungo
+    return conDecimali.sort((a, b) => b.length - a.length)[0];
+  }
+  // Poi cerca numeri interi da 4 a 8 cifre (lettura senza decimali)
+  const interi = [...t.matchAll(/\b(\d{4,8})\b/g)].map(m => m[1]);
+  if (interi.length > 0) {
+    return interi.sort((a, b) => b.length - a.length)[0];
+  }
+  return null;
+}
+
+async function handleFile(file) {
+  if (!file) return;
+
+  const isContatore = document.getElementById('modo-contatore').checked;
 
   // Anteprima immagine
   if (file.type.startsWith('image/')) {
@@ -1046,20 +1387,36 @@ function handleFile(file) {
 
   barWrap.classList.add('show');
   barFill.style.width = '0%';
-  ocrStatus.textContent = 'Inizializzazione OCR…';
+  barFill.style.background = '#0062cc';
+  ocrStatus.textContent = isContatore ? 'Analisi contatore in corso…' : 'Inizializzazione OCR…';
   ocrPct.textContent = '0%';
 
-  Tesseract.recognize(file, 'ita+eng', {
+  // Per contatori usa solo 'eng' (più veloce) + maschera pixel rossi
+  const lang = isContatore ? 'eng' : 'ita+eng';
+  let fileOCR = file;
+
+  if (isContatore && file.type && file.type.startsWith('image/')) {
+    ocrStatus.textContent = 'Rimozione cifre rosse (decimali)…';
+    const { blob, nRossi } = await mascheraRosso(file);
+    fileOCR = blob;
+    if (nRossi > 0) ocrStatus.textContent = `Cifre rosse escluse (${nRossi} px) — OCR in corso…`;
+    // Aggiorna anteprima con immagine pre-processata
+    const previewUrl = URL.createObjectURL(blob);
+    document.getElementById('thumb-img').src = previewUrl;
+    document.getElementById('thumb-wrap').style.display = 'block';
+  }
+
+  Tesseract.recognize(fileOCR, lang, {
     logger: m => {
       if (m.status === 'recognizing text') {
         const pct = Math.round(m.progress * 100);
         barFill.style.width = pct + '%';
         ocrPct.textContent = pct + '%';
-        ocrStatus.textContent = 'Lettura testo…';
+        ocrStatus.textContent = isContatore ? 'Rilevamento cifre contatore…' : 'Lettura testo…';
       } else if (m.status === 'loading tesseract core') {
         ocrStatus.textContent = 'Caricamento motore OCR…';
       } else if (m.status === 'loading language traineddata') {
-        ocrStatus.textContent = 'Caricamento dizionario italiano…';
+        ocrStatus.textContent = isContatore ? 'Caricamento dati…' : 'Caricamento dizionario…';
       } else if (m.status === 'initializing tesseract') {
         ocrStatus.textContent = 'Inizializzazione…';
       }
@@ -1067,13 +1424,31 @@ function handleFile(file) {
   }).then(({ data: { text } }) => {
     barFill.style.width = '100%';
     ocrPct.textContent = '100%';
-    ocrStatus.textContent = '✔ Testo estratto';
 
-    const pulito = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-    document.getElementById('testo-reclamo').value = pulito;
-
-    // Triggera rilevamento categoria
-    document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
+    if (isContatore) {
+      const lettura = estraiLettura(text);
+      if (lettura) {
+        ocrStatus.textContent = '✔ Lettura contatore estratta';
+        document.getElementById('lettura-contatore').value = lettura;
+        document.getElementById('lettura-box').classList.add('show');
+        // Se il testo reclamo è vuoto, precompila con la lettura
+        if (!document.getElementById('testo-reclamo').value.trim()) {
+          document.getElementById('testo-reclamo').value =
+            `Reclamo relativo al contatore. Lettura rilevata: ${lettura} m³`;
+          document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
+        }
+      } else {
+        ocrStatus.textContent = '⚠ Lettura non rilevata — inserire manualmente';
+        barFill.style.background = '#f59e0b';
+        document.getElementById('lettura-box').classList.add('show');
+        document.getElementById('lettura-contatore').focus();
+      }
+    } else {
+      ocrStatus.textContent = '✔ Testo estratto';
+      const pulito = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+      document.getElementById('testo-reclamo').value = pulito;
+      document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
+    }
 
     setTimeout(() => barWrap.classList.remove('show'), 3000);
   }).catch(err => {
