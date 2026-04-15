@@ -260,8 +260,9 @@ textarea:focus { outline: none; border-color: var(--blu); }
         <div class="upload-zone" id="upload-zone"
              ondragover="event.preventDefault();this.classList.add('drag')"
              ondragleave="this.classList.remove('drag')"
-             ondrop="handleDrop(event)">
-          <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.bmp,.tiff,.webp,.pdf" onchange="handleFile(this.files[0])">
+             ondrop="handleDrop(event)"
+             onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.bmp,.tiff,.webp,.pdf" onchange="handleFile(this.files[0])" onclick="event.stopPropagation()">
           <div class="uz-icon">🖼️</div>
           <div class="uz-label">Carica immagine reclamo (JPG, PNG, PDF…)</div>
           <div class="uz-sub">oppure trascina qui il file — il testo verrà estratto automaticamente</div>
@@ -273,8 +274,9 @@ textarea:focus { outline: none; border-color: var(--blu); }
         <div class="upload-zone" id="eml-upload-zone"
              ondragover="event.preventDefault();this.classList.add('drag')"
              ondragleave="this.classList.remove('drag')"
-             ondrop="handleEMLDrop(event)">
-          <input type="file" id="eml-input" accept=".eml,message/rfc822" onchange="handleEML(this.files[0])">
+             ondrop="handleEMLDrop(event)"
+             onclick="document.getElementById('eml-input').click()">
+          <input type="file" id="eml-input" accept=".eml,message/rfc822" onchange="handleEML(this.files[0])" onclick="event.stopPropagation()">
           <div class="uz-icon">📧</div>
           <div class="uz-label">Carica file email (.eml) con allegati</div>
           <div class="uz-sub">Estrae testo del reclamo e immagini allegate (es. foto contatori)</div>
