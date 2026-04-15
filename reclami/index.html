@@ -3,154 +3,148 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SORICAL – Bot Reclami</title>
+<title>SORICAL – Rispondi Reclamo</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+window._pdfjsReady = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs').then(mod => {
+  mod.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+  return mod;
+});
+</script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a2a3a; }
+:root {
+  --blu: #003580; --blu2: #0055b3; --acqua: #0088bb;
+  --bg: #f0f4f8; --card: #fff; --bordo: #d0dae6;
+  --txt: #1a2a3a; --txt2: #5a6a7a; --verde: #16a34a; --rosso: #dc2626; --arancio: #ea580c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--txt); }
 
-  header {
-    background: #003580;
-    color: white;
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  }
-  header svg { flex-shrink: 0; }
-  header h1 { font-size: 1.25rem; font-weight: 700; }
-  header span { font-size: .85rem; opacity: .8; }
+header {
+  background: linear-gradient(135deg, var(--blu), var(--blu2));
+  color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+}
+header h1 { font-size: 1.15rem; font-weight: 700; }
+header .sub { font-size: .82rem; opacity: .7; }
+header .back { color: #fff; text-decoration: none; font-size: .85rem; margin-left: auto; opacity: .7; }
+header .back:hover { opacity: 1; }
 
-  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media(max-width:800px){ .grid { grid-template-columns:1fr; } }
+/* ── STEP FLOW ── */
+.steps { display: flex; gap: 8px; margin-bottom: 20px; }
+.step-dot { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--txt2); font-weight: 600; }
+.step-dot .num {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--bordo); color: var(--txt2);
+  display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700;
+}
+.step-dot.active .num { background: var(--blu); color: #fff; }
+.step-dot.done .num { background: var(--verde); color: #fff; }
+.step-dot .arrow { color: var(--bordo); }
 
-  .card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
-    padding: 20px;
-  }
-  .card h2 { font-size: 1rem; color: #003580; margin-bottom: 12px; border-bottom: 2px solid #003580; padding-bottom: 8px; }
+/* ── CARDS ── */
+.card {
+  background: var(--card); border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  border: 1px solid var(--bordo); margin-bottom: 16px; overflow: hidden;
+}
+.card-head {
+  padding: 14px 18px; font-size: .92rem; font-weight: 700; color: var(--blu);
+  border-bottom: 1px solid #e8edf3; background: #f8fafc;
+}
+.card-body { padding: 16px 18px; }
 
-  textarea {
-    width: 100%;
-    border: 1.5px solid #c8d6e5;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: .93rem;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 200px;
-    line-height: 1.5;
-    transition: border-color .2s;
-  }
-  textarea:focus { outline: none; border-color: #003580; }
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 2.5px dashed var(--acqua); border-radius: 12px; padding: 40px 20px;
+  text-align: center; cursor: pointer; transition: all .2s; background: #f4faff;
+}
+.upload-zone:hover, .upload-zone.drag { background: #e0f0ff; border-color: var(--blu); }
+.upload-zone input { display: none; }
+.upload-zone .icon { font-size: 2.5rem; margin-bottom: 8px; }
+.upload-zone .label { font-size: 1rem; font-weight: 600; color: var(--blu); }
+.upload-zone .sub { font-size: .82rem; color: var(--txt2); margin-top: 4px; }
+.upload-zone.has-file { border-style: solid; border-color: var(--verde); background: #f0fdf4; }
+.upload-zone.has-file .icon::before { content: '✔'; }
 
-  .meta-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-  .meta-row label { font-size: .85rem; color: #555; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
-  .meta-row input, .meta-row select {
-    border: 1.5px solid #c8d6e5;
-    border-radius: 5px;
-    padding: 6px 10px;
-    font-family: inherit;
-    font-size: .88rem;
-  }
-  .meta-row input:focus, .meta-row select:focus { outline: none; border-color: #003580; }
+/* ── PROGRESS ── */
+.progress-wrap { display: none; margin-top: 14px; }
+.progress-wrap.show { display: block; }
+.progress-label { font-size: .82rem; color: var(--txt2); display: flex; justify-content: space-between; margin-bottom: 4px; }
+.progress-bar { width: 100%; height: 6px; background: #e0e8f0; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--blu); border-radius: 3px; width: 0%; transition: width .2s; }
 
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: .8rem;
-    font-weight: 600;
-    margin-top: 8px;
-  }
-  .badge-blue { background: #dbeafe; color: #1e40af; }
-  .badge-orange { background: #ffedd5; color: #9a3412; }
-  .badge-green { background: #dcfce7; color: #166534; }
+/* ── FILE INFO ── */
+.file-info {
+  display: none; margin-top: 14px; padding: 12px 16px; background: #f0fdf4;
+  border: 1px solid #bbf0c9; border-radius: 8px; font-size: .85rem;
+}
+.file-info.show { display: block; }
+.file-info .fi-row { display: flex; gap: 8px; margin-bottom: 4px; }
+.file-info .fi-label { font-weight: 600; color: var(--txt2); min-width: 100px; }
 
-  .btn-primary {
-    background: #003580;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 11px 28px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 14px;
-    width: 100%;
-    transition: background .2s;
-  }
-  .btn-primary:hover { background: #0050b3; }
-  .btn-primary:active { background: #002060; }
+/* ── GRID 2 COL ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:800px) { .grid2 { grid-template-columns: 1fr; } }
 
-  .btn-copy {
-    background: #e8f0fe;
-    color: #1a56db;
-    border: 1.5px solid #c3d9ff;
-    border-radius: 6px;
-    padding: 8px 20px;
-    font-size: .9rem;
-    cursor: pointer;
-    margin-top: 12px;
-    font-weight: 600;
-    transition: background .2s;
-  }
-  .btn-copy:hover { background: #c3d9ff; }
+/* ── DATI ESTRATTI ── */
+.dati-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+@media(max-width:600px) { .dati-grid { grid-template-columns: 1fr; } }
+.dati-grid label { font-size: .82rem; color: var(--txt2); display: flex; flex-direction: column; gap: 3px; }
+.dati-grid input, .dati-grid select {
+  border: 1.5px solid var(--bordo); border-radius: 5px; padding: 7px 10px;
+  font-family: inherit; font-size: .88rem;
+}
+.dati-grid input:focus, .dati-grid select:focus { outline: none; border-color: var(--blu); }
 
-  .btn-clear {
-    background: transparent;
-    color: #888;
-    border: 1.5px solid #ccc;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: .88rem;
-    cursor: pointer;
-    margin-top: 12px;
-    margin-left: 8px;
-  }
-  .btn-clear:hover { background: #f5f5f5; }
+/* ── TESTO RECLAMO ── */
+textarea {
+  width: 100%; border: 1.5px solid var(--bordo); border-radius: 6px;
+  padding: 12px; font-family: inherit; font-size: .88rem; resize: vertical;
+  min-height: 160px; line-height: 1.55;
+}
+textarea:focus { outline: none; border-color: var(--blu); }
 
-  #categoria-info {
-    background: #f0f8ff;
-    border: 1px solid #bbd4f5;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-top: 12px;
-    font-size: .88rem;
-    min-height: 40px;
-  }
+/* ── CATEGORIA ── */
+.cat-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: .82rem; font-weight: 600; margin-top: 6px;
+}
+.cat-badge.auto { background: #dbeafe; color: #1e40af; }
+.cat-badge.manual { background: #ffedd5; color: #9a3412; }
+.norma-box {
+  background: #fffbeb; border-left: 3px solid #f59e0b; padding: 8px 12px;
+  border-radius: 0 6px 6px 0; font-size: .8rem; margin-top: 8px; color: #78350f;
+  display: none;
+}
+.norma-box.show { display: block; }
 
-  #output-area {
-    width: 100%;
-    font-family: 'Courier New', monospace;
-    font-size: .82rem;
-    border: 1.5px solid #c8d6e5;
-    border-radius: 6px;
-    padding: 14px;
-    min-height: 480px;
-    resize: vertical;
-    background: #f9fbff;
-    line-height: 1.65;
-    color: #1a2a3a;
-    white-space: pre-wrap;
-  }
+/* ── BUTTONS ── */
+.btn {
+  border: none; border-radius: 6px; padding: 11px 24px; font-size: .95rem;
+  font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.btn-primary { background: var(--blu); color: #fff; width: 100%; margin-top: 10px; }
+.btn-primary:hover { background: var(--blu2); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-copy { background: #e8f0fe; color: #1a56db; border: 1.5px solid #c3d9ff; }
+.btn-copy:hover { background: #c3d9ff; }
+.btn-clear { background: transparent; color: #888; border: 1.5px solid #ccc; }
+.btn-clear:hover { background: #f5f5f5; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
 
-  .norma-box {
-    background: #fffbeb;
-    border-left: 3px solid #f59e0b;
-    padding: 8px 12px;
-    border-radius: 0 6px 6px 0;
-    font-size: .82rem;
-    margin-top: 8px;
-    color: #78350f;
-  }
+/* ── OUTPUT ── */
+#output-area {
+  width: 100%; font-family: 'Courier New', monospace; font-size: .8rem;
+  border: 1.5px solid var(--bordo); border-radius: 6px; padding: 14px;
+  min-height: 500px; resize: vertical; background: #f9fbff;
+  line-height: 1.6; white-space: pre-wrap;
+}
+#copy-msg { font-size: .82rem; color: var(--verde); display: none; }
 
-  #cat-select { width: 100%; }
+/* ── THUMB ── */
+.thumb-wrap { display: none; text-align: center; margin-top: 10px; }
+.thumb-wrap img { max-height: 120px; border-radius: 6px; border: 1px solid var(--bordo); }
 
   .tip { font-size: .78rem; color: #888; margin-top: 4px; }
 
@@ -213,24 +207,29 @@
 <body>
 
 <header>
-  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-    <circle cx="18" cy="18" r="18" fill="#0062cc"/>
-    <path d="M10 22c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="18" cy="13" r="2.5" fill="white"/>
-    <path d="M18 25v-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="18" cy="26.5" r="1.5" fill="white"/>
-  </svg>
   <div>
-    <h1>SORICAL S.p.A. — Bot Risposta Reclami</h1>
-    <span>Elaborazione automatica basata su Carta dei Servizi e normativa ARERA</span>
+    <h1>SORICAL S.p.A. — Rispondi Reclamo</h1>
+    <div class="sub">Carica email/PDF/immagine reclamo → risposta automatica</div>
   </div>
+  <a class="back" href="../index.html">← Dashboard</a>
 </header>
 
-<div class="container">
-  <div class="grid">
+<div class="wrap">
 
-    <!-- COLONNA SX: INPUT -->
+  <!-- STEP INDICATORS -->
+  <div class="steps">
+    <div class="step-dot active" id="s1"><span class="num">1</span> Carica file</div>
+    <span class="step-dot arrow">→</span>
+    <div class="step-dot" id="s2"><span class="num">2</span> Verifica dati</div>
+    <span class="step-dot arrow">→</span>
+    <div class="step-dot" id="s3"><span class="num">3</span> Risposta</div>
+  </div>
+
+  <div class="grid2">
+    <!-- ═══ COLONNA SX ═══ -->
     <div>
+
+      <!-- UPLOAD -->
       <div class="card">
         <h2>1. Incolla testo del reclamo ricevuto</h2>
         <div class="meta-row">
@@ -304,254 +303,335 @@
             <span id="ocr-status">Lettura in corso…</span>
             <span id="ocr-pct">0%</span>
           </div>
-          <div class="ocr-bar"><div class="ocr-bar-fill" id="ocr-bar-fill"></div></div>
-        </div>
 
-        <textarea id="testo-reclamo" placeholder="Incolla qui il testo dell'email o della lettera di reclamo ricevuta... oppure carica un'immagine sopra."></textarea>
-        <div id="categoria-info">
-          <em style="color:#aaa">La categoria verrà rilevata automaticamente dopo aver incollato il testo.</em>
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-label">
+              <span id="prog-status">Elaborazione…</span>
+              <span id="prog-pct">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+          </div>
+
+          <div class="file-info" id="file-info">
+            <div class="fi-row"><span class="fi-label">File:</span><span id="fi-name">—</span></div>
+            <div class="fi-row"><span class="fi-label">Mittente:</span><span id="fi-from">—</span></div>
+            <div class="fi-row"><span class="fi-label">Oggetto:</span><span id="fi-subject">—</span></div>
+            <div class="fi-row"><span class="fi-label">Data:</span><span id="fi-date">—</span></div>
+            <div class="fi-row"><span class="fi-label">Allegati:</span><span id="fi-attach">—</span></div>
+          </div>
+
+          <div class="thumb-wrap" id="thumb-wrap">
+            <img id="thumb-img" src="" alt="anteprima">
+          </div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:16px;">
-        <h2>2. Verifica / Forza categoria</h2>
-        <select id="cat-select">
-          <option value="auto">— Rilevamento automatico —</option>
-          <option value="fatturazione">Fatturazione / Bollette errate</option>
-          <option value="conguaglio">Conguaglio / Consumi anomali</option>
-          <option value="perdita_occulta">Perdita occulta / Rettifica bolletta</option>
-          <option value="prescrizione">Prescrizione consumi &gt; 2 anni</option>
-          <option value="rateizzazione">Rateizzazione pagamenti</option>
-          <option value="voltura">Voltura / Subentro / Cambio intestatario</option>
-          <option value="attivazione">Attivazione / Riattivazione fornitura</option>
-          <option value="disattivazione">Disattivazione / Cessazione fornitura</option>
-          <option value="allaccio">Allaccio idrico / Fognario</option>
-          <option value="misuratore">Verifica / Sostituzione misuratore</option>
-          <option value="pressione">Verifica livello pressione</option>
-          <option value="morosita">Sospensione per morosità illegittima</option>
-          <option value="interruzione">Interruzione / Sospensione servizio</option>
-          <option value="qualita_acqua">Qualità dell'acqua (organolettici)</option>
-          <option value="appuntamento">Mancato rispetto appuntamento</option>
-          <option value="informazione">Richiesta informazioni / Chiarimenti</option>
-          <option value="lavori">Ritardo esecuzione lavori</option>
-          <option value="generico">Reclamo generico</option>
-        </select>
-
-        <div class="norma-box" id="norma-box" style="display:none"></div>
-
-        <button class="btn-primary" onclick="elaboraReclamo()">⚡ Genera risposta formale</button>
-      </div>
-    </div>
-
-    <!-- COLONNA DX: OUTPUT -->
-    <div>
+      <!-- DATI ESTRATTI -->
       <div class="card">
-        <h2>3. Risposta generata — pronta per copia/incolla</h2>
-        <textarea id="output-area" placeholder="La risposta apparirà qui dopo aver cliccato 'Genera risposta formale'..."></textarea>
-        <div class="toolbar">
-          <button class="btn-copy" onclick="copiaRisposta()">📋 Copia risposta</button>
-          <button class="btn-clear" onclick="pulisciTutto()">🗑 Pulisci tutto</button>
-          <span id="copy-msg" style="font-size:.82rem;color:green;display:none">✔ Copiato!</span>
+        <div class="card-head">2. Dati estratti (modifica se serve)</div>
+        <div class="card-body">
+          <div class="dati-grid">
+            <label>Nome utente / Mittente
+              <input type="text" id="nome-utente" placeholder="Auto-compilato dal file">
+            </label>
+            <label>Data reclamo
+              <input type="date" id="data-reclamo">
+            </label>
+            <label>N° protocollo
+              <input type="text" id="protocollo" placeholder="Auto o manuale">
+            </label>
+            <label>N° contratto / Cod. cliente
+              <input type="text" id="contratto" placeholder="Auto o manuale">
+            </label>
+          </div>
+
+          <label style="display:block;margin-top:12px;font-size:.82rem;color:var(--txt2)">
+            Testo del reclamo (estratto dal file — modificabile)
+            <textarea id="testo-reclamo" style="margin-top:4px" placeholder="Il testo verrà estratto automaticamente dal file caricato…"></textarea>
+          </label>
+
+          <div style="margin-top:12px">
+            <label style="font-size:.82rem;color:var(--txt2);display:flex;flex-direction:column;gap:3px;">
+              Categoria reclamo
+              <select id="cat-select">
+                <option value="auto">— Rilevamento automatico —</option>
+                <option value="fatturazione">Fatturazione / Bollette errate</option>
+                <option value="conguaglio">Conguaglio / Consumi anomali</option>
+                <option value="perdita_occulta">Perdita occulta / Rettifica bolletta</option>
+                <option value="prescrizione">Prescrizione consumi &gt; 2 anni</option>
+                <option value="rateizzazione">Rateizzazione pagamenti</option>
+                <option value="voltura">Voltura / Subentro</option>
+                <option value="attivazione">Attivazione / Riattivazione</option>
+                <option value="disattivazione">Disattivazione / Cessazione</option>
+                <option value="allaccio">Allaccio idrico / Fognario</option>
+                <option value="misuratore">Verifica / Sostituzione misuratore</option>
+                <option value="pressione">Verifica livello pressione</option>
+                <option value="morosita">Sospensione per morosità</option>
+                <option value="interruzione">Interruzione servizio</option>
+                <option value="qualita_acqua">Qualità dell'acqua</option>
+                <option value="appuntamento">Mancato appuntamento</option>
+                <option value="informazione">Richiesta informazioni</option>
+                <option value="lavori">Ritardo lavori</option>
+                <option value="generico">Reclamo generico</option>
+              </select>
+            </label>
+            <div id="cat-detected"></div>
+            <div class="norma-box" id="norma-box"></div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-genera" onclick="elaboraReclamo()">⚡ Genera risposta al reclamo</button>
         </div>
       </div>
     </div>
 
+    <!-- ═══ COLONNA DX ═══ -->
+    <div>
+      <div class="card" style="position:sticky;top:16px">
+        <div class="card-head">3. Risposta generata — pronta per invio</div>
+        <div class="card-body">
+          <textarea id="output-area" placeholder="Carica un file reclamo e clicca 'Genera risposta'…"></textarea>
+          <div class="btn-row">
+            <button class="btn btn-copy" onclick="copiaRisposta()">📋 Copia risposta</button>
+            <button class="btn btn-clear" onclick="pulisciTutto()">🗑 Pulisci tutto</button>
+            <span id="copy-msg">✔ Copiato!</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
+<footer>SORICAL S.p.A. — Uso riservato al personale interno — Ufficio Reclami</footer>
+
 <script>
-// ─────────────────────────────────────────────────────────────
-// DATI: standard SORICAL da Carta dei Servizi + ARERA 655/2015
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// CATEGORIE + NORME + STANDARD
+// ═══════════════════════════════════════════════════════════════
 const CATEGORIE = {
   fatturazione: {
     label: "Fatturazione / Bollette errate",
     norme: ["Art. 38-42 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.4.1, 4.4.5, 4.4.8"],
-    standard: "Risposta a richiesta scritta di rettifica fatturazione: 30 gg lavorativi (standard specifico). Rettifica e accredito somma non dovuta: 60 gg lavorativi. Indennizzo automatico: € 30 per ogni prestazione fuori standard.",
-    risposta: elaboraFatturazione
+    standard: "Risposta a rettifica fatturazione: 30 gg lav. Rettifica/accredito: 60 gg lav. Indennizzo: € 30.",
+    fn: rispostaFatturazione
   },
   conguaglio: {
     label: "Conguaglio / Consumi anomali",
-    norme: ["Del. ARERA 655/2015/R/IDR (RQSII) § 4.3.9", "Carta dei Servizi SORICAL § 4.4.1, 4.4.4"],
-    standard: "Risposta a reclamo scritto: 30 gg lavorativi. Prescrizione consumi risalenti a più di 2 anni: applicazione automatica per legge. Indennizzo: € 30.",
-    risposta: elaboraConguaglio
+    norme: ["Del. ARERA 655/2015/R/IDR § 4.3.9", "Carta dei Servizi SORICAL § 4.4.1, 4.4.4"],
+    standard: "Risposta reclamo: 30 gg lav. Prescrizione >2 anni automatica. Indennizzo: € 30.",
+    fn: rispostaConguaglio
   },
   perdita_occulta: {
     label: "Perdita occulta / Rettifica bolletta",
-    norme: ["Del. ARERA 609/2021/R/IDR del 21/12/2021 (mod. Del. 218/2016/R/IDR)", "Carta dei Servizi SORICAL § 4.4.2"],
-    standard: "Rettifica fattura possibile se consumo ≥ doppio del consumo medio giornaliero. Ricalcolo con metà tariffa base sul volume eccedente; esonero fognatura/depurazione sul volume eccedente.",
-    risposta: elaboraPerditaOcculta
+    norme: ["Del. ARERA 609/2021/R/IDR", "Carta dei Servizi SORICAL § 4.4.2"],
+    standard: "Rettifica se consumo ≥ doppio media. Ricalcolo metà tariffa. Esonero fogna/depurazione eccedente.",
+    fn: rispostaPerditaOcculta
   },
   prescrizione: {
     label: "Prescrizione consumi > 2 anni",
-    norme: ["Legge 27/12/2017 n. 205 art. 1 c. 4 (Legge di Bilancio 2018)", "Delibera ARERA 311/2019/R/IDR", "Carta dei Servizi SORICAL § 4.4.4"],
-    standard: "I corrispettivi riferiti a consumi risalenti a più di 2 anni non possono essere richiesti all'utente. SORICAL è tenuta al rispetto della normativa sulla prescrizione biennale.",
-    risposta: elaboraPrescrizione
+    norme: ["L. 205/2017 art. 1 c. 4", "Del. ARERA 311/2019/R/IDR", "CdS SORICAL § 4.4.4"],
+    standard: "Consumi >2 anni non esigibili. Storno automatico.",
+    fn: rispostaPrescrizione
   },
   rateizzazione: {
     label: "Rateizzazione pagamenti",
-    norme: ["Art. 42 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.4.7"],
-    standard: "Diritto a rateizzazione se la bolletta supera dell'80% l'addebito medio degli ultimi 12 mesi. Se supera del 150% il gestore allega automaticamente bollettini rateali. Durata minima 12 mesi in caso di morosità.",
-    risposta: elaboraRateizzazione
+    norme: ["Art. 42 All. A Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.4.7"],
+    standard: "Diritto se bolletta >80% media 12 mesi. Piano min 12 mesi.",
+    fn: rispostaRateizzazione
   },
   voltura: {
-    label: "Voltura / Subentro / Cambio intestatario",
-    norme: ["Art. 9-11 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.2.3 e Scheda 1"],
-    standard: "Tempo esecuzione voltura: 5 gg lavorativi (standard specifico). Subentro senza modifica portata: 5 gg lavorativi. Subentro con modifica portata: 10 gg lavorativi. Indennizzo automatico: € 30.",
-    risposta: elaboraVoltura
+    label: "Voltura / Subentro",
+    norme: ["Art. 9-11 All. A Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.2.3"],
+    standard: "Voltura: 5 gg lav. Subentro con mod. portata: 10 gg lav. Indennizzo: € 30.",
+    fn: rispostaVoltura
   },
   attivazione: {
-    label: "Attivazione / Riattivazione fornitura",
-    norme: ["Art. 9-12 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.2.3 e Scheda 1"],
-    standard: "Attivazione/riattivazione senza mod. portata: 5 gg lavorativi. Con mod. portata: 10 gg lavorativi. Indennizzo automatico: € 30 per ogni giorno di superamento.",
-    risposta: elaboraAttivazione
+    label: "Attivazione / Riattivazione",
+    norme: ["Art. 9-12 All. A Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.2.3"],
+    standard: "Attivazione: 5 gg lav. Con mod. portata: 10 gg lav. Indennizzo: € 30.",
+    fn: rispostaAttivazione
   },
   disattivazione: {
-    label: "Disattivazione / Cessazione fornitura",
-    norme: ["Art. 13 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.2.4"],
-    standard: "Disattivazione su richiesta utente: 7 gg lavorativi (standard specifico). Indennizzo automatico: € 30.",
-    risposta: elaboraDisattivazione
+    label: "Disattivazione / Cessazione",
+    norme: ["Art. 13 All. A Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.2.4"],
+    standard: "Disattivazione: 7 gg lav. Indennizzo: € 30.",
+    fn: rispostaDisattivazione
   },
   allaccio: {
     label: "Allaccio idrico / Fognario",
-    norme: ["Art. 6-8 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.2.1-4.2.2 e Scheda 1"],
-    standard: "Preventivazione senza sopralluogo: 10 gg lavorativi. Preventivazione con sopralluogo: 20 gg lavorativi. Esecuzione allaccio idrico semplice: 15 gg lavorativi. Allaccio fognario semplice: 20 gg lavorativi. Indennizzo: € 30 per prestazione.",
-    risposta: elaboraAllaccio
+    norme: ["Art. 6-8 All. A Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.2.1-4.2.2"],
+    standard: "Preventivo senza sopralluogo: 10 gg. Con sopralluogo: 20 gg. Esecuzione: 15 gg. Indennizzo: € 30.",
+    fn: rispostaAllaccio
   },
   misuratore: {
     label: "Verifica / Sostituzione misuratore",
-    norme: ["Art. 29-32 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Del. ARERA 547/2019/R/IDR", "D.M. 93/2017", "Carta dei Servizi SORICAL § 4.4.11-4.4.12"],
-    standard: "Intervento verifica misuratore: 10 gg lavorativi. Comunicazione esito (in loco): 10 gg lavorativi. Comunicazione esito (laboratorio): 30 gg lavorativi. Sostituzione misuratore malfunzionante: 10 gg lavorativi. Indennizzo: € 30.",
-    risposta: elaboraMisuratore
+    norme: ["Art. 29-32 Del. ARERA 655/2015/R/IDR", "Del. 547/2019/R/IDR", "D.M. 93/2017", "CdS § 4.4.11-12"],
+    standard: "Verifica: 10 gg lav. Esito lab: 30 gg. Sostituzione: 10 gg. Indennizzo: € 30.",
+    fn: rispostaMisuratore
   },
   pressione: {
     label: "Verifica livello pressione",
-    norme: ["Art. 33 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.4.14"],
-    standard: "Intervento verifica pressione: 10 gg lavorativi (standard specifico). Comunicazione esito: 10 gg lavorativi. Indennizzo: € 30 per prestazione. Pressione minima garantita al punto di consegna: 5 m (piano abitabile più elevato).",
-    risposta: elaboraPressione
+    norme: ["Art. 33 Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.4.14"],
+    standard: "Verifica: 10 gg lav. Min 5m carico idraulico. Indennizzo: € 30.",
+    fn: rispostaPressione
   },
   morosita: {
-    label: "Sospensione per morosità illegittima",
-    norme: ["Art. 7.4-7.5 REMSI ARERA", "Art. 44-47 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.4.7 e Scheda 3"],
-    standard: "Sospensione anticipata rispetto a termine mora: indennizzo € 10. Sospensione utente non disalimentabile o domestico residente: indennizzo € 30. Sospensione senza invio comunicazione mora: indennizzo € 30. Riattivazione dopo pagamento: 2 gg feriali.",
-    risposta: elaboraMorosita
+    label: "Sospensione per morosità",
+    norme: ["Art. 7.4-7.5 REMSI ARERA", "Art. 44-47 Del. 655/2015/R/IDR", "CdS § 4.4.7"],
+    standard: "Riattivazione: 2 gg feriali. Indennizzo: € 10-30.",
+    fn: rispostaMorosita
   },
   interruzione: {
-    label: "Interruzione / Sospensione servizio",
-    norme: ["Del. ARERA 917/2017/R/IDR (RQTI)", "Carta dei Servizi SORICAL § 4.5 e Scheda 4"],
-    standard: "Durata max sospensione programmata: 24 ore (standard specifico – indennizzo € 30). Attivazione servizio sostitutivo emergenza: 48 ore (indennizzo € 30). Preavviso interruzioni programmate: 48 ore (indennizzo € 30). Risposta chiamata pronto intervento: < 120 secondi.",
-    risposta: elaboraInterruzione
+    label: "Interruzione servizio",
+    norme: ["Del. ARERA 917/2017/R/IDR (RQTI)", "CdS SORICAL § 4.5"],
+    standard: "Max sospensione: 24h. Emergenza: 48h. Preavviso: 48h. Indennizzo: € 30.",
+    fn: rispostaInterruzione
   },
   qualita_acqua: {
     label: "Qualità dell'acqua",
-    norme: ["D.Lgs. 31/2001 e D.Lgs. 18/2023 (recepimento Dir. UE 2020/2184)", "Carta dei Servizi SORICAL § 4.7"],
-    standard: "Parametri di qualità garantiti: colore, odore, sapore accettabili; batteri coliformi 0/100ml; concentrazione ioni H+ tra 6.5 e 9.5 pH; residuo secco ≤ 1500 mg/l. Il gestore è tenuto a dare comunicazione tempestiva di eventuali anomalie.",
-    risposta: elaboraQualitaAcqua
+    norme: ["D.Lgs. 31/2001", "D.Lgs. 18/2023", "CdS SORICAL § 4.7"],
+    standard: "Parametri: pH 6.5-9.5, coliformi 0/100ml. Comunicazione tempestiva anomalie.",
+    fn: rispostaQualitaAcqua
   },
   appuntamento: {
-    label: "Mancato rispetto appuntamento",
-    norme: ["Art. 20 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.3.5 e Scheda 2"],
-    standard: "Fascia di puntualità appuntamenti: 3 ore (standard specifico – indennizzo € 30). Disdetta appuntamento: preavviso minimo 24 ore (standard generale). Il mancato rispetto della fascia comporta indennizzo automatico.",
-    risposta: elaboraAppuntamento
+    label: "Mancato appuntamento",
+    norme: ["Art. 20 Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.3.5"],
+    standard: "Fascia puntualità: 3h. Indennizzo automatico: € 30.",
+    fn: rispostaAppuntamento
   },
   informazione: {
-    label: "Richiesta informazioni / Chiarimenti",
-    norme: ["Art. 23 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.3.10 e Scheda 2"],
-    standard: "Risposta a richiesta scritta di informazione: 30 gg lavorativi (standard specifico – indennizzo € 30). SORICAL è tenuta a rispondere in modo motivato e completo.",
-    risposta: elaboraInformazione
+    label: "Richiesta informazioni",
+    norme: ["Art. 23 Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.3.10"],
+    standard: "Risposta: 30 gg lav. Indennizzo: € 30.",
+    fn: rispostaInformazione
   },
   lavori: {
-    label: "Ritardo esecuzione lavori",
-    norme: ["Art. 35-37 All. A Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL § 4.4.15-4.4.16 e Scheda 3"],
-    standard: "Preventivazione con sopralluogo: 20 gg lavorativi (indennizzo € 30). Senza sopralluogo: 10 gg lavorativi. Esecuzione lavori semplici: 10 gg lavorativi (indennizzo € 30). Lavori complessi: ≤ 30 gg lavorativi (generale, 90% singole prestazioni).",
-    risposta: elaboraLavori
+    label: "Ritardo lavori",
+    norme: ["Art. 35-37 Del. ARERA 655/2015/R/IDR", "CdS SORICAL § 4.4.15-16"],
+    standard: "Preventivo: 10-20 gg. Lavori semplici: 10 gg. Complessi: 30 gg. Indennizzo: € 30.",
+    fn: rispostaLavori
   },
   generico: {
     label: "Reclamo generico",
     norme: ["Del. ARERA 655/2015/R/IDR (RQSII)", "Carta dei Servizi SORICAL"],
-    standard: "Risposta a reclamo scritto: 30 gg lavorativi (standard specifico – indennizzo € 30). SORICAL è tenuta a rispondere in modo motivato entro il termine previsto.",
-    risposta: elaboraGenerico
+    standard: "Risposta reclamo: 30 gg lav. Indennizzo: € 30.",
+    fn: rispostaGenerico
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// RILEVAMENTO AUTOMATICO CATEGORIA
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// RILEVAMENTO CATEGORIA
+// ═══════════════════════════════════════════════════════════════
 function rilevaCategoria(testo) {
   const t = testo.toLowerCase();
   if (/perdita occulta|perdita nascosta|tubo rotto|guasto interno|consumo anomalo|consumo eccessivo/.test(t)) return 'perdita_occulta';
   if (/prescriz|pi[uù] di due anni|oltre due anni|consumi vecchi|consumi risalenti/.test(t)) return 'prescrizione';
   if (/rattei[zz]|rateizzaz|rate|piano di rientro|pagamento rateale/.test(t)) return 'rateizzazione';
   if (/conguaglio|consumo stimato|stima|lettura stimata/.test(t)) return 'conguaglio';
-  if (/bolletta errata|fattura errata|errore.*fattura|fattura sbagliata|importo errato|rettifica.*fattura|fattura.*rettifica/.test(t)) return 'fatturazione';
-  if (/fattura.*non ricevuta|bolletta.*non ricevuta|non ho ricevuto.*fattura|emissione.*fattura/.test(t)) return 'fatturazione';
+  if (/bolletta errata|fattura errata|errore.*fattura|fattura sbagliata|importo errato|rettifica.*fattura/.test(t)) return 'fatturazione';
+  if (/fattura.*non ricevuta|bolletta.*non ricevuta|non ho ricevuto.*fattura/.test(t)) return 'fatturazione';
   if (/voltura|cambio intestatario|subentro|subentrante/.test(t)) return 'voltura';
   if (/riattivaz|attivazione.*fornitura|ripristino.*fornitura|nuovo contratto/.test(t)) return 'attivazione';
   if (/disattivaz|cessaz|disdetta|chiusura contratto/.test(t)) return 'disattivazione';
   if (/allaccio|allacciamento|nuovo allaccio|fognario|fognatura/.test(t)) return 'allaccio';
-  if (/contatore.*non funziona|misuratore.*rotto|misuratore.*difettoso|verifica.*contatore|contatore.*verifica|sostituz.*contatore/.test(t)) return 'misuratore';
-  if (/pressione.*bassa|poca pressione|bassa pressione|verifica.*pressione|pressione.*anomala/.test(t)) return 'pressione';
-  if (/sospeso|sospensione|distaccato|tagliato|fornitura.*interrotta|morosi[tà]|morosità illegittima/.test(t)) return 'morosita';
-  if (/interruz|sospensione.*servizio|mancanza.*acqua|senz.*acqua|erogaz.*sospesa/.test(t)) return 'interruzione';
-  if (/acqua.*colorata|acqua.*torbida|odore|sapore|qualit.*acqua|acqua.*non potabile|acqua.*sporca/.test(t)) return 'qualita_acqua';
-  if (/appuntamento.*mancato|non si.*presentat|tecnico.*non venuto|sopralluogo.*non eseguito/.test(t)) return 'appuntamento';
-  if (/lavori.*ritard|ritardo.*lavori|esecuzione.*lavori|tempi.*lavori/.test(t)) return 'lavori';
+  if (/contatore.*non funziona|misuratore.*rotto|misuratore.*difettoso|verifica.*contatore|sostituz.*contatore/.test(t)) return 'misuratore';
+  if (/pressione.*bassa|poca pressione|bassa pressione|verifica.*pressione/.test(t)) return 'pressione';
+  if (/sospeso|sospensione|distaccato|tagliato|fornitura.*interrotta|morosi[tà]/.test(t)) return 'morosita';
+  if (/interruz|sospensione.*servizio|mancanza.*acqua|senz.*acqua/.test(t)) return 'interruzione';
+  if (/acqua.*colorata|acqua.*torbida|odore|sapore|qualit.*acqua|acqua.*sporca/.test(t)) return 'qualita_acqua';
+  if (/appuntamento.*mancato|non si.*presentat|tecnico.*non venuto/.test(t)) return 'appuntamento';
+  if (/lavori.*ritard|ritardo.*lavori|esecuzione.*lavori/.test(t)) return 'lavori';
   if (/informat|chiariment|informaz|spiegaz/.test(t)) return 'informazione';
   if (/bolletta|fattura|importo|addebito|pagamento/.test(t)) return 'fatturazione';
   return 'generico';
 }
 
-// ─────────────────────────────────────────────────────────────
-// AUTO-DETECT MENTRE SI DIGITA
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// ESTRAZIONE DATI DAL TESTO
+// ═══════════════════════════════════════════════════════════════
+function estraiDati(testo) {
+  const t = testo, d = {};
+  const importiMatch = t.match(/(?:€|euro)\s*[\d.,]+|[\d.,]+\s*(?:€|euro)/gi);
+  if (importiMatch) d.importi = [...new Set(importiMatch.map(s => s.trim()))];
+  const fattMatch = t.match(/(?:fattura|bolletta|fatt\.?)\s*(?:n\.?|nr\.?|num\.?)?\s*[\w\/-]+\d+/gi);
+  if (fattMatch) d.fatture = [...new Set(fattMatch.map(s => s.trim()))];
+  const codClMatch = t.match(/(?:codice\s*cliente|cod\.?\s*cl\.?)\s*[:\s]?\s*([\w\d\/-]+)/i);
+  if (codClMatch) d.codiceCliente = codClMatch[1].trim();
+  const codForMatch = t.match(/(?:codice\s*fornitura|cod\.?\s*forn\.?|PDR)\s*[:\s]?\s*([\w\d\/-]+)/i);
+  if (codForMatch) d.codiceFornitura = codForMatch[1].trim();
+  const matrMatch = t.match(/(?:matricola|matr\.?|contatore\s*n\.?)\s*[:\s]?\s*([\w\d\/-]+)/i);
+  if (matrMatch) d.matricola = matrMatch[1].trim();
+  const lettureMatch = t.match(/(?:lettura|misura|consumo)\s*[:\s]?\s*([\d.,]+)\s*(?:mc|m³|metri\s*cubi)?/gi);
+  if (lettureMatch) d.letture = [...new Set(lettureMatch.map(s => s.trim()))];
+  const indMatch = t.match(/(?:via|viale|piazza|corso|contrada|loc\.?|località|c\.da)\s+[A-Za-zÀ-ú\s,.]+\d*(?:\s*[-–]\s*\d{5}\s*[A-Za-zÀ-ú\s()]+)?/i);
+  if (indMatch) d.indirizzo = indMatch[0].trim().replace(/\s{2,}/g, ' ');
+  const dateMatch = t.match(/\d{1,2}[\/.\\-]\d{1,2}[\/.\\-]\d{2,4}/g);
+  if (dateMatch) d.date = [...new Set(dateMatch)];
+  const periodoMatch = t.match(/(?:periodo|dal)\s*[:\s]?\s*(\d{1,2}[\/.\\-]\d{1,2}[\/.\\-]\d{2,4})\s*(?:al|[-–])\s*(\d{1,2}[\/.\\-]\d{1,2}[\/.\\-]\d{2,4})/i);
+  if (periodoMatch) d.periodo = `${periodoMatch[1]} al ${periodoMatch[2]}`;
+  const consumoMatch = t.match(/([\d.,]+)\s*(?:mc|m³|metri\s*cubi)/i);
+  if (consumoMatch) d.consumoMc = consumoMatch[1];
+  const comuneMatch = t.match(/(?:comune\s*di|residente\s*(?:a|in))\s+([A-Za-zÀ-ú\s']+)/i);
+  if (comuneMatch) d.comune = comuneMatch[1].trim();
+  const emailMatch = t.match(/[\w.\-+]+@[\w.\-]+\.\w{2,}/i);
+  if (emailMatch) d.email = emailMatch[0];
+  const telMatch = t.match(/(?:tel\.?|cell\.?|telefono|cellulare)\s*[:\s]?\s*([\d\s\+\-/.]{7,})/i);
+  if (telMatch) d.telefono = telMatch[1].trim();
+  const cfMatch = t.match(/(?:C\.?F\.?|codice\s*fiscale)\s*[:\s]?\s*([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])/i);
+  if (cfMatch) d.cf = cfMatch[1].toUpperCase();
+  return d;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO-DETECT CATEGORIA LIVE
+// ═══════════════════════════════════════════════════════════════
 document.getElementById('testo-reclamo').addEventListener('input', function() {
   const t = this.value.trim();
-  if (t.length < 30) {
-    document.getElementById('categoria-info').innerHTML = '<em style="color:#aaa">Continua a digitare per rilevare la categoria...</em>';
-    return;
-  }
+  if (t.length < 20) { document.getElementById('cat-detected').innerHTML = ''; return; }
+  if (document.getElementById('cat-select').value !== 'auto') return;
   const cat = rilevaCategoria(t);
   const info = CATEGORIE[cat];
-  const sel = document.getElementById('cat-select');
-  if (sel.value === 'auto') {
-    document.getElementById('categoria-info').innerHTML =
-      `<strong>Categoria rilevata:</strong> <span class="badge badge-blue">${info.label}</span>` +
-      `<div class="tip" style="margin-top:6px"><strong>Norme applicabili:</strong> ${info.norme.join(' · ')}</div>`;
-    aggiornaNormaBox(cat);
-  }
+  document.getElementById('cat-detected').innerHTML = `<span class="cat-badge auto">${info.label}</span>`;
+  showNorma(cat);
 });
 
 document.getElementById('cat-select').addEventListener('change', function() {
-  const val = this.value;
-  if (val !== 'auto') {
-    aggiornaNormaBox(val);
-    const info = CATEGORIE[val];
-    document.getElementById('categoria-info').innerHTML =
-      `<strong>Categoria selezionata:</strong> <span class="badge badge-orange">${info.label}</span>`;
+  if (this.value !== 'auto') {
+    showNorma(this.value);
+    document.getElementById('cat-detected').innerHTML =
+      `<span class="cat-badge manual">${CATEGORIE[this.value].label}</span>`;
   } else {
-    document.getElementById('norma-box').style.display = 'none';
-    const t = document.getElementById('testo-reclamo').value.trim();
-    if (t.length > 30) {
-      const cat = rilevaCategoria(t);
-      document.getElementById('categoria-info').innerHTML =
-        `<strong>Categoria rilevata:</strong> <span class="badge badge-blue">${CATEGORIE[cat].label}</span>`;
-    }
+    document.getElementById('norma-box').classList.remove('show');
+    document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
   }
 });
 
-function aggiornaNormaBox(cat) {
-  const info = CATEGORIE[cat];
+function showNorma(cat) {
   const box = document.getElementById('norma-box');
-  box.style.display = 'block';
-  box.innerHTML = `<strong>Standard applicabile:</strong> ${info.standard}`;
+  box.innerHTML = `<strong>Standard:</strong> ${CATEGORIE[cat].standard}<br><strong>Norme:</strong> ${CATEGORIE[cat].norme.join(' · ')}`;
+  box.classList.add('show');
 }
 
-// ─────────────────────────────────────────────────────────────
+// Data odierna default
+document.getElementById('data-reclamo').valueAsDate = new Date();
+
+// ═══════════════════════════════════════════════════════════════
+// STEP INDICATORS
+// ═══════════════════════════════════════════════════════════════
+function setStep(n) {
+  ['s1','s2','s3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i + 1 < n) el.classList.add('done');
+    else if (i + 1 === n) el.classList.add('active');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // GENERAZIONE RISPOSTA
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
 function elaboraReclamo() {
   const testo = document.getElementById('testo-reclamo').value.trim();
-  if (!testo) { alert('Incolla prima il testo del reclamo.'); return; }
+  if (!testo) { alert('Carica prima un file o incolla il testo del reclamo.'); return; }
 
   const catSel = document.getElementById('cat-select').value;
   const cat = (catSel === 'auto') ? rilevaCategoria(testo) : catSel;
@@ -586,474 +666,405 @@ function elaboraReclamo() {
   document.getElementById('output-area').value = risposta;
 }
 
-// ─────────────────────────────────────────────────────────────
-// HELPER: intestazione + chiusura
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATE: INTESTAZIONE + SINTESI + CHIUSURA
+// ═══════════════════════════════════════════════════════════════
 function intestazione(d) {
-  let riga2 = '';
-  if (d.prot) riga2 += `Vs. Rif./Prot.: ${d.prot}  —  `;
-  if (d.contratto) riga2 += `N° Contratto: ${d.contratto}`;
+  let meta = [];
+  if (d.prot) meta.push(`Vs. Rif./Prot.: ${d.prot}`);
+  if (d.contratto) meta.push(`N° Contratto/Cliente: ${d.contratto}`);
+  if (d.dati.matricola) meta.push(`Matricola contatore: ${d.dati.matricola}`);
+  if (d.dati.indirizzo) meta.push(`Fornitura: ${d.dati.indirizzo}`);
+
+  // Sintesi reclamo
+  const frasi = d.testo.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  const riassunto = frasi.length > 400 ? frasi.substring(0, 397) + '…' : frasi;
+
+  let sintesiRighe = [];
+  sintesiRighe.push(`"${riassunto}"`);
+  if (d.dati.fatture) sintesiRighe.push(`Fatture citate: ${d.dati.fatture.join(', ')}`);
+  if (d.dati.importi) sintesiRighe.push(`Importi: ${d.dati.importi.join(', ')}`);
+  if (d.dati.consumoMc) sintesiRighe.push(`Consumo: ${d.dati.consumoMc} mc`);
+  if (d.dati.periodo) sintesiRighe.push(`Periodo: ${d.dati.periodo}`);
+  if (d.dati.letture) sintesiRighe.push(`Letture: ${d.dati.letture.join(', ')}`);
+  if (d.dati.date && d.dati.date.length) sintesiRighe.push(`Date: ${d.dati.date.join(', ')}`);
+  if (d.dati.email) sintesiRighe.push(`Email: ${d.dati.email}`);
+  if (d.dati.telefono) sintesiRighe.push(`Tel: ${d.dati.telefono}`);
+  if (d.dati.cf) sintesiRighe.push(`CF: ${d.dati.cf}`);
 
   return `SORICAL S.p.A. — Servizio Idrico Integrato della Regione Calabria
 Sede Legale: Viale Europa 35 – Loc. Germaneto – 88100 Catanzaro (CZ)
 PEC: reclami.soricalspa.it@pec.it | Sito: www.soricalspa.com
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Data: ${d.dataOggi}
-${riga2 ? riga2.trim() + '\n' : ''}
+${meta.length ? meta.join('  |  ') + '\n' : ''}
 A: ${d.nome}
 
 OGGETTO: Riscontro al reclamo del ${d.dataReclamo} — ${d.label}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+SINTESI DEL RECLAMO RICEVUTO:
+${sintesiRighe.map(r => '  ' + r).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ${d.nome},
 
-in riferimento al Suo reclamo ricevuto in data ${d.dataReclamo}${d.prot ? ` (prot. n. ${d.prot})` : ''}, relativo a "${d.label}", SORICAL S.p.A., nella propria qualità di Gestore Unico del Servizio Idrico Integrato dell'Ambito Unico della Regione Calabria, così risponde in conformità alla Carta dei Servizi, alla normativa vigente e alle disposizioni dell'Autorità di Regolazione per Energia Reti e Ambiente (ARERA).
+in riferimento al Suo reclamo ricevuto in data ${d.dataReclamo}${d.prot ? ` (prot. n. ${d.prot})` : ''}, relativo a "${d.label}", SORICAL S.p.A., nella propria qualità di Gestore del Servizio Idrico Integrato della Regione Calabria, così risponde ai sensi della Carta dei Servizi e della normativa ARERA.
 `;
 }
 
 function chiusura(d) {
   return `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RIFERIMENTI NORMATIVI APPLICABILI:
+RIFERIMENTI NORMATIVI:
 ${d.norme.map(n => '  • ' + n).join('\n')}
 
-In caso di mancata o insoddisfacente risposta, l'Utente ha facoltà di:
-  a) Attivare la procedura di Conciliazione presso lo Sportello del Consumatore dell'ARERA (tel. 800.166.654 – www.sportelloperilconsumatore.it);
-  b) Attivare la Conciliazione Paritetica tramite le Associazioni dei Consumatori convenzionate;
-  c) Rivolgersi all'ARRICAL – Autorità Rifiuti e Risorse Idriche della Calabria.
+TUTELE DELL'UTENTE — In caso di mancata o insoddisfacente risposta:
+  a) Conciliazione ARERA: tel. 800.166.654 – www.sportelloperilconsumatore.it
+  b) Conciliazione Paritetica tramite Associazioni Consumatori
+  c) ARRICAL – Autorità Rifiuti e Risorse Idriche della Calabria
 
 Cordiali saluti,
 
 SORICAL S.p.A.
 Ufficio Reclami e Tutela Utente
-Tel. Verde Commerciale: 800.069.127 | Da mobile: 0961.76.76.21
+Tel. Verde: 800.069.127 | Da mobile: 0961.76.76.21
 PEC: reclami.soricalspa.it@pec.it
 `;
 }
 
-// ─────────────────────────────────────────────────────────────
-// FUNZIONI PER CATEGORIA
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// RISPOSTE PER CATEGORIA (con dati estratti)
+// ═══════════════════════════════════════════════════════════════
 
-function elaboraFatturazione(d) {
+function rispostaFatturazione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-A seguito dell'esame del reclamo pervenuto, si comunica quanto segue.
+SORICAL ha preso in carico la segnalazione relativa alla fatturazione${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''} e provvederà alle verifiche tecniche e contabili.
 
-SORICAL S.p.A. ha preso in carico la segnalazione relativa alla fatturazione e provvederà ad effettuare le necessarie verifiche tecniche e contabili sulla bolletta contestata.
+Ai sensi dell'art. 4.4.1 della Carta dei Servizi e dell'art. 38 All. A Del. ARERA 655/2015/R/IDR:
+  • la fatturazione è basata su letture effettive, autoletture validate o stime;
+  • errori in eccesso/difetto vengono corretti d'ufficio o su richiesta;
+  • risposta motivata al reclamo: 30 gg lavorativi (indennizzo € 30);
+  • rettifica e accredito somma non dovuta: 60 gg lavorativi (indennizzo € 30).
+${dd.importi ? '\nImporti contestati: ' + dd.importi.join(', ') + '. Se confermato errore, accredito in prima bolletta utile o rimessa diretta.' : ''}
+${dd.consumoMc ? 'Consumo dichiarato dall\'Utente: ' + dd.consumoMc + ' mc — sarà confrontato con storico letture.' : ''}
+${dd.periodo ? 'Periodo contestato: ' + dd.periodo + '.' : ''}
 
-Ai sensi dell'art. 4.4.1 della Carta dei Servizi e dell'art. 38 dell'Allegato A alla Del. ARERA n. 655/2015/R/IDR, SORICAL garantisce che:
-  • la fatturazione è basata su letture effettive o autoletture validate ovvero, in assenza, su consumi stimati;
-  • qualora vengano riscontrati errori in eccesso o in difetto, la correzione avviene d'ufficio o a seguito di richiesta dell'Utente;
-  • il tempo di risposta motivata al reclamo scritto è di 30 giorni lavorativi (standard specifico soggetto a indennizzo automatico di € 30);
-  • il tempo di rettifica e accredito della somma non dovuta è di 60 giorni lavorativi dalla ricezione della richiesta scritta (standard specifico soggetto a indennizzo automatico di € 30).
-
-Qualora a seguito di verifica risultasse un addebito non dovuto, l'eventuale credito verrà accreditato nella prima bolletta utile o restituito mediante rimessa diretta.
-
-Si ricorda che, ai sensi della normativa vigente, i consumi risalenti a più di 2 anni non possono essere richiesti all'utente finale (Legge 27/12/2017 n. 205, art. 1, c. 4, e Del. ARERA 311/2019/R/IDR).
-
-AZIONE RICHIESTA: Per una più celere risoluzione della problematica, si invita l'Utente a trasmettere, se disponibile, copia della bolletta contestata e documentazione integrativa a mezzo PEC a reclami.soricalspa.it@pec.it o presso gli sportelli SORICAL.
+Consumi risalenti a più di 2 anni non possono essere richiesti (L. 205/2017, Del. ARERA 311/2019/R/IDR).
 ` + chiusura(d);
 }
 
-function elaboraConguaglio(d) {
+function rispostaConguaglio(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro alla segnalazione relativa al conguaglio/consumo anomalo contestato, si comunica quanto segue.
+In merito al conguaglio${dd.fatture ? ' relativo a '+dd.fatture.join(', ') : ''} contestato:
 
-SORICAL S.p.A. ha verificato quanto esposto e informa l'Utente che:
+1. LETTURE: La fatturazione si basa su letture effettive. In caso di stima, sarà riallineata alla prima lettura disponibile.${dd.letture ? ' Letture indicate: '+dd.letture.join(', ')+' — saranno verificate.' : ''}
 
-1. LETTURE E STIME: Ai sensi dell'art. 4.4.1 della Carta dei Servizi, SORICAL effettua la fatturazione sulla base di letture effettive. In caso di stima, la fatturazione sarà riallineata alla prima lettura effettiva disponibile.
+2. PRESCRIZIONE BIENNALE: Consumi >2 anni dalla data bolletta non addebitabili (L. 205/2017).
 
-2. PRESCRIZIONE BIENNALE: Ai sensi della Legge 27/12/2017 n. 205 (Legge di Bilancio 2018) e della Del. ARERA 311/2019/R/IDR, i consumi risalenti a più di 2 anni dalla data di ricezione della bolletta non possono essere addebitati. Eventuali consumi in prescrizione saranno automaticamente stornati.
+3. RACCOLTA MISURA: Garantiti min 2 tentativi/anno (≤3.000 mc) o 3/anno (>3.000 mc). Indennizzo € 30 se non rispettato.
 
-3. TENTATIVI DI LETTURA: SORICAL garantisce un numero minimo annuo di tentativi di raccolta della misura: 2/anno per consumi ≤ 3.000 mc/anno e 3/anno per consumi > 3.000 mc/anno. Il mancato rispetto di tale standard comporta l'erogazione di un indennizzo automatico di € 30.
+4. CONSUMO ANOMALO: SORICAL comunica tempestivamente anomalie (art. 4.4.9 CdS).${dd.consumoMc ? ' Consumo segnalato: '+dd.consumoMc+' mc — confronto con storico in corso.' : ''}
 
-4. CONSUMO ANOMALO: Qualora venga rilevato un consumo anomalo in sede di raccolta della misura, SORICAL è tenuta a darne comunicazione tempestiva all'Utente ai sensi dell'art. 4.4.9 della Carta dei Servizi.
-
-Si sta procedendo alla verifica della cronologia delle letture. L'esito sarà comunicato nei tempi previsti dalla normativa.
+Verifica cronologia letture${dd.matricola ? ' contatore matr. '+dd.matricola : ''} in corso.
 ` + chiusura(d);
 }
 
-function elaboraPerditaOcculta(d) {
+function rispostaPerditaOcculta(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
+ESITO: AMMESSO — ISTRUTTORIA AVVIATA
 
-In merito alla richiesta di rettifica bolletta per perdita occulta, si comunicano le condizioni di accesso alla tutela prevista dalla normativa vigente.
+Rettifica per perdita occulta ai sensi Del. ARERA 609/2021/R/IDR e art. 4.4.2 CdS.
 
-NORMATIVA APPLICABILE: Del. ARERA 609/2021/R/IDR del 21/12/2021 (modificativa della Del. ARERA 218/2016/R/IDR) e art. 4.4.2 della Carta dei Servizi SORICAL.
+CONDIZIONI ACCESSO:
+  a) Consumo${dd.consumoMc ? ' ('+dd.consumoMc+' mc)' : ''} ≥ doppio del consumo medio giornaliero ultimi 2 anni;
+  b) Perdita già riparata dall'Utente.
 
-CONDIZIONI PER L'ACCESSO ALLA TUTELA:
-  a) Il consumo rilevato nella fattura contestata deve essere almeno doppio rispetto al consumo medio giornaliero di riferimento degli ultimi due anni antecedenti alla perdita;
-  b) La perdita deve essere già stata riparata dall'Utente.
+DOCUMENTAZIONE NECESSARIA:
+  1. Descrizione e foto intervento riparazione;
+  2. Foto contatore${dd.matricola ? ' (matr. '+dd.matricola+')' : ''} prima e dopo;
+  3. Fattura spese riparazione.
 
-DOCUMENTAZIONE NECESSARIA (da allegare all'istanza):
-  1. Descrizione dettagliata e documentazione fotografica dell'intervento di riparazione;
-  2. Foto del contatore prima e dopo la riparazione;
-  3. Fattura delle spese sostenute per la riparazione.
+RICALCOLO (se accolto):
+  • Storno importo fatturato${dd.importi ? ' ('+dd.importi.join(', ')+')' : ''};
+  • Acquedotto: metà tariffa base su volume eccedente;
+  • Esonero fognatura/depurazione su eccedenza.
 
-MODALITÀ DI RICALCOLO (in caso di accoglimento):
-  • Storno dell'importo precedentemente fatturato;
-  • Per il servizio di acquedotto: applicazione di metà della tariffa base al volume eccedente il consumo medio giornaliero di riferimento;
-  • Esonero dall'applicazione delle tariffe di fognatura e depurazione al volume eccedente.
-
-NOTA: La tutela per perdite occulte può essere richiesta nuovamente decorsi almeno 3 anni dalla data di emissione della precedente fattura con consumo anomalo.
-
-AZIONE RICHIESTA: Si invita l'Utente a trasmettere la documentazione sopra indicata a mezzo PEC a reclami.soricalspa.it@pec.it o presso gli sportelli SORICAL, entro 3 mesi dalla data di emissione della fattura contestata.
+Documentazione da inviare via PEC a reclami.soricalspa.it@pec.it entro 3 mesi dalla fattura contestata${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''}.
 ` + chiusura(d);
 }
 
-function elaboraPrescrizione(d) {
+function rispostaPrescrizione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: FONDATO — ACCOGLIMENTO
+ESITO: FONDATO — ACCOGLIMENTO
 
-In riscontro al reclamo relativo alla fatturazione di consumi risalenti a più di due anni, SORICAL S.p.A. comunica quanto segue.
+Ai sensi della L. 205/2017 art. 1 c. 4 e Del. ARERA 311/2019/R/IDR, i corrispettivi riferiti a consumi risalenti a più di 2 anni non possono essere richiesti.
 
-NORMATIVA APPLICABILE: Art. 1, comma 4, della Legge 27 dicembre 2017 n. 205 (Legge di Bilancio 2018) e Deliberazione ARERA n. 311/2019/R/IDR, recepita dall'art. 4.4.4 della Carta dei Servizi SORICAL.
-
-ESITO: I corrispettivi del servizio idrico integrato riferiti a consumi risalenti a più di due anni rispetto alla data di emissione/ricezione della fattura non possono essere legittimamente richiesti all'utente finale, indipendentemente dalla causa del ritardo nella fatturazione.
-
-In conformità alla normativa sopra richiamata, SORICAL S.p.A. provvederà:
-  1. A stornare dalla/e fattura/e contestata/e gli importi riferiti a consumi maturati oltre il biennio precedente alla data di emissione della fattura;
-  2. A ricalcolare il debito residuo, se esistente, con le sole somme esigibili;
-  3. Ad accreditare l'eventuale somma non dovuta e già corrisposta dall'Utente nella prima bolletta utile o tramite rimessa diretta.
-
-SORICAL si scusa per l'inconveniente e si impegna al rispetto della normativa in materia di prescrizione biennale in tutte le successive emissioni.
+SORICAL provvederà a:
+  1. Stornare dalle fatture contestate${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''} gli importi >2 anni;
+  2. Ricalcolare il debito residuo con sole somme esigibili;
+  3. Accreditare somme non dovute${dd.importi ? ' (segnalati: '+dd.importi.join(', ')+')' : ''} in prima bolletta utile o rimessa diretta.
+${dd.periodo ? '\nPeriodo contestato: '+dd.periodo+'.' : ''}
 ` + chiusura(d);
 }
 
-function elaboraRateizzazione(d) {
+function rispostaRateizzazione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — DIRITTO ALLA RATEIZZAZIONE RICONOSCIUTO
+ESITO: AMMESSO — DIRITTO RATEIZZAZIONE RICONOSCIUTO
 
-In merito alla richiesta di rateizzazione, SORICAL S.p.A. informa l'Utente dei diritti previsti dalla normativa vigente.
+Ai sensi art. 42 Del. ARERA 655/2015/R/IDR e art. 4.4.7 CdS:
 
-NORMATIVA: Art. 42 All. A Del. ARERA 655/2015/R/IDR (RQSII) e art. 4.4.7 della Carta dei Servizi SORICAL.
+1. DIRITTO AUTOMATICO: Se fattura${dd.importi ? ' ('+dd.importi.join(', ')+')' : ''} supera +80% media ultimi 12 mesi. Oltre +150% → bollettini rateali automatici.
 
-CONDIZIONI E MODALITÀ:
+2. PIANO MOROSITÀ: Min 12 mesi, rate non cumulabili.
 
-1. DIRITTO AUTOMATICO: L'Utente ha diritto alla rateizzazione qualora la fattura superi dell'80% il valore dell'addebito medio delle bollette degli ultimi 12 mesi. Se la fattura supera del 150%, SORICAL è tenuta ad allegare automaticamente i bollettini per il pagamento rateale.
+3. INTERESSI: Non dovuti se ritardo fatturazione imputabile al Gestore.
 
-2. PIANO DI RATEIZZAZIONE PER MOROSITÀ: In caso di costituzione in mora, SORICAL garantisce la possibilità di richiedere un piano di rateizzazione di durata minima 12 mesi, con rate non cumulabili e periodicità corrispondente a quella di fatturazione.
+4. CASI SPECIALI: Sospensione fino a 3 mesi per perdita lavoro, infortunio, ospedalizzazione, lutto.
 
-3. SOSPENSIONE DEGLI INTERESSI: Gli interessi di dilazione non si applicano qualora l'addebito elevato sia derivato da prolungati periodi di sospensione della fatturazione o conguagli per cause imputabili al Gestore.
-
-4. CASI SPECIALI: In caso di perdita di lavoro, infortunio, ospedalizzazione o decesso di un familiare, l'Utente può richiedere la sospensione del piano fino a 3 mesi senza costi aggiuntivi.
-
-TERMINE RICHIESTA: La richiesta di rateizzazione deve essere presentata entro il 10° giorno solare successivo alla scadenza della fattura.
-
-COME PROCEDERE: L'Utente può richiedere il piano di rateizzazione allo sportello SORICAL più vicino, tramite call-center (800.069.127) o inviando il modulo disponibile su www.soricalspa.com.
+Richiesta entro 10° giorno dalla scadenza fattura${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''}. Sportello, call-center 800.069.127 o www.soricalspa.com.
 ` + chiusura(d);
 }
 
-function elaboraVoltura(d) {
+function rispostaVoltura(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro al reclamo relativo alla voltura/subentro nella fornitura idrica, si comunica quanto segue.
-
-NORMATIVA: Art. 9-11 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.2.3 e Scheda 1.
+Voltura/subentro${dd.indirizzo ? ' per fornitura in '+dd.indirizzo : ''}:
 
 STANDARD GARANTITI:
-  • Tempo di esecuzione della voltura: 5 giorni lavorativi dalla data di ricevimento della richiesta completa (standard specifico soggetto a indennizzo automatico di € 30);
-  • Tempo di riattivazione/subentro senza modifica della portata del misuratore: 5 giorni lavorativi;
-  • Tempo di riattivazione/subentro con modifica della portata del misuratore: 10 giorni lavorativi.
+  • Voltura: 5 gg lav dalla richiesta completa (indennizzo € 30);
+  • Subentro senza mod. portata${dd.matricola ? ' (matr. '+dd.matricola+')' : ''}: 5 gg lav;
+  • Subentro con mod. portata: 10 gg lav.
 
-In caso di mancato rispetto del termine previsto, SORICAL è tenuta a corrispondere all'Utente un indennizzo automatico di € 30,00, che sarà accreditato nella prima bolletta utile.
+DOCUMENTI NECESSARI: documento identità, codice fiscale${dd.cf ? ' ('+dd.cf+')' : ''}, atto proprietà/locazione, documentazione tecnica punto di consegna.
 
-DOCUMENTAZIONE: Per procedere con la voltura/subentro sono necessari: documento d'identità, codice fiscale, atto di proprietà/locazione e documentazione tecnica del punto di consegna.
-
-Si invita l'Utente a contattare il servizio commerciale (800.069.127) o recarsi presso lo sportello SORICAL per verificare lo stato della pratica.
+Contattare servizio commerciale 800.069.127 o sportello per stato pratica.
 ` + chiusura(d);
 }
 
-function elaboraAttivazione(d) {
+function rispostaAttivazione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro alla segnalazione relativa all'attivazione/riattivazione della fornitura idrica, si comunica quanto segue.
+Attivazione/riattivazione${dd.indirizzo ? ' fornitura '+dd.indirizzo : ''}:
 
-NORMATIVA: Art. 9-12 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.2.3.
+  • Attivazione nuova / riattivazione senza mod. portata: 5 gg lav (indennizzo € 30);
+  • Con modifica portata${dd.matricola ? ' (matr. '+dd.matricola+')' : ''}: 10 gg lav (indennizzo € 30).
 
-STANDARD GARANTITI:
-  • Attivazione fornitura nuova: 5 giorni lavorativi dalla stipula del contratto (indennizzo automatico € 30 se non rispettato);
-  • Riattivazione/subentro senza modifiche portata misuratore: 5 giorni lavorativi (indennizzo € 30);
-  • Riattivazione/subentro con modifiche portata misuratore: 10 giorni lavorativi (indennizzo € 30).
+Richieste oltre le 18 trattate come pervenute il giorno lav. successivo. Indennizzo accreditato entro 180 gg.
 
-NOTA: Le richieste di riattivazione pervenute oltre le ore 18 nei giorni lavorativi sono trattate come pervenute il giorno lavorativo successivo.
-
-In caso di mancato rispetto dei termini sopra indicati, l'Utente ha diritto all'indennizzo automatico di € 30,00 accreditato nella prima bolletta utile entro 180 giorni solari dalla formazione dell'obbligo.
-
-Si sta verificando lo stato della pratica e si provvederà a completare l'attivazione/riattivazione nel più breve tempo possibile.
+Pratica in fase di completamento.
 ` + chiusura(d);
 }
 
-function elaboraDisattivazione(d) {
+function rispostaDisattivazione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro alla segnalazione relativa alla disattivazione della fornitura idrica, si comunica quanto segue.
+Disattivazione fornitura${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.matricola ? ' (contatore matr. '+dd.matricola+')' : ''}:
 
-NORMATIVA: Art. 13 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.2.4.
+  • Tempo disattivazione: 7 gg lav dalla richiesta (indennizzo € 30).
+  • Comporta interruzione erogazione, rimozione contatore e risoluzione contratto.
 
-STANDARD GARANTITO:
-  • Tempo di disattivazione della fornitura su richiesta dell'Utente: 7 giorni lavorativi dalla data di ricevimento della richiesta (standard specifico soggetto a indennizzo automatico di € 30 in caso di superamento).
-
-In caso di mancato rispetto del termine, SORICAL è tenuta a corrispondere l'indennizzo automatico di € 30,00 nella prima bolletta utile.
-
-Si precisa che la disattivazione comporta l'interruzione dell'erogazione del servizio con la contestuale rimozione del contatore e la risoluzione del rapporto contrattuale.
-
-Si sta prendendo in carico la richiesta e si provvederà alla disattivazione nei tempi stabiliti dalla normativa.
+Richiesta presa in carico.
 ` + chiusura(d);
 }
 
-function elaboraAllaccio(d) {
+function rispostaAllaccio(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro alla segnalazione relativa all'allaccio idrico/fognario, si comunicano i termini normativi applicabili.
+Allaccio${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' (Comune di '+dd.comune+')' : ''}:
 
-NORMATIVA: Art. 6-8 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.2.1-4.2.2.
+  • Preventivo senza sopralluogo: 10 gg lav (indennizzo € 30);
+  • Preventivo con sopralluogo: 20 gg lav (indennizzo € 30);
+  • Esecuzione allaccio idrico semplice: 15 gg lav (indennizzo € 30);
+  • Allaccio fognario semplice: 20 gg lav (indennizzo € 30);
+  • Allaccio complesso: ≤ 30 gg lav.
 
-STANDARD GARANTITI:
-  • Preventivazione allaccio senza sopralluogo: 10 giorni lavorativi (indennizzo € 30);
-  • Preventivazione allaccio con sopralluogo: 20 giorni lavorativi (indennizzo € 30);
-  • Esecuzione allaccio idrico – lavoro semplice: 15 giorni lavorativi dalla data di accettazione del preventivo (indennizzo € 30);
-  • Esecuzione allaccio fognario – lavoro semplice: 20 giorni lavorativi (indennizzo € 30);
-  • Esecuzione allaccio complesso: ≤ 30 giorni lavorativi (standard generale, 90% prestazioni).
+Tempi al netto di autorizzazioni enti terzi e adempimenti a carico Utente.
 
-NOTA: I tempi si calcolano al netto del tempo necessario per il rilascio di autorizzazioni da parte di terzi e del tempo per adempimenti a carico dell'Utente. I lavori di allacciamento vengono eseguiti esclusivamente dal Gestore.
-
-In caso di superamento dei termini per cause imputabili a SORICAL, l'Utente ha diritto all'indennizzo automatico di € 30,00 per ogni standard specifico non rispettato.
-
-Si sta verificando lo stato della pratica.
+Verifica stato pratica in corso.
 ` + chiusura(d);
 }
 
-function elaboraMisuratore(d) {
+function rispostaMisuratore(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — ISTRUTTORIA AVVIATA
+ESITO: AMMESSO — ISTRUTTORIA AVVIATA
 
-In riscontro alla richiesta di verifica/sostituzione del misuratore, si comunica quanto segue.
+Verifica/sostituzione misuratore${dd.matricola ? ' matr. '+dd.matricola : ''}${dd.indirizzo ? ' presso '+dd.indirizzo : ''}:
 
-NORMATIVA: Art. 29-32 All. A Del. ARERA 655/2015/R/IDR, Del. ARERA 547/2019/R/IDR, D.M. 93/2017, Carta dei Servizi SORICAL § 4.4.11-4.4.12.
+  • Verifica sul posto: 10 gg lav (indennizzo € 30);
+  • Esito in loco: 10 gg lav (indennizzo € 30);
+  • Esito laboratorio: 30 gg lav (indennizzo € 30);
+  • Sostituzione malfunzionante: 10 gg lav (indennizzo € 30).
+${dd.letture ? '\nLetture segnalate: '+dd.letture.join(', ')+' — saranno utilizzate come riferimento.' : ''}
+ESITO VERIFICA:
+  a) REGOLARE: fatture confermate, costo verifica addebitabile;
+  b) IRREGOLARE: sostituzione + rettifica consumi periodo anomalia.
 
-STANDARD GARANTITI:
-  • Intervento di verifica del misuratore sul posto: 10 giorni lavorativi dalla richiesta (indennizzo € 30);
-  • Comunicazione esito verifica effettuata in loco: 10 giorni lavorativi (indennizzo € 30);
-  • Comunicazione esito verifica effettuata in laboratorio: 30 giorni lavorativi (indennizzo € 30);
-  • Sostituzione del misuratore risultato malfunzionante: 10 giorni lavorativi dall'invio dell'esito (indennizzo € 30).
+Utente può presenziare verifica lab o richiedere contraddittorio Camera di Commercio (D.M. 93/2017).
 
-ESITO DELLA VERIFICA:
-  a) Se il misuratore risulta REGOLARE: le fatture emesse si confermano corrette; SORICAL potrà addebitare il costo della verifica;
-  b) Se il misuratore risulta IRREGOLARE: SORICAL provvederà alla sostituzione e alla rettifica dei consumi fatturati nel periodo di anomalia accertata.
-
-L'Utente ha facoltà di presenziare alla verifica in laboratorio e di richiedere, in alternativa, la verifica in contraddittorio presso la Camera di Commercio territorialmente competente ai sensi del D.M. 93/2017.
-
-SORICAL provvederà a contattare l'Utente per concordare le modalità e la data dell'intervento.
+SORICAL contatterà l'Utente${dd.telefono ? ' al '+dd.telefono : ''}${dd.email ? ' / '+dd.email : ''} per concordare intervento.
 ` + chiusura(d);
 }
 
-function elaboraPressione(d) {
+function rispostaPressione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — SOPRALLUOGO PROGRAMMATO
+ESITO: AMMESSO — SOPRALLUOGO PROGRAMMATO
 
-In riscontro alla segnalazione relativa al livello di pressione della rete, si comunica quanto segue.
+Verifica pressione${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
 
-NORMATIVA: Art. 33 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.4.14.
+LIVELLI MINIMI: portata 0,10 l/sec; carico idraulico min 5m (piano più elevato); max 70m notturno.
 
-LIVELLI MINIMI GARANTITI (per utenze domestiche):
-  • Portata minima al punto di consegna: 0,10 l/sec;
-  • Carico idraulico minimo al punto di consegna: 5 m (piano abitabile più elevato, in norma con strumenti urbanistici);
-  • Carico idraulico massimo (piano stradale): 70 m nelle ore notturne.
+  • Verifica: 10 gg lav (indennizzo € 30);
+  • Comunicazione esito: 10 gg lav (indennizzo € 30).
 
-STANDARD GARANTITI:
-  • Intervento di verifica del livello di pressione: 10 giorni lavorativi dalla richiesta (indennizzo automatico € 30 in caso di mancato rispetto);
-  • Comunicazione dell'esito della verifica: 10 giorni lavorativi dall'effettuazione (indennizzo € 30).
+Se IRREGOLARE: interventi tecnici per ripristino. Se REGOLARE: costi verifica addebitabili.
 
-ESITO:
-  a) Se la verifica conferma IRREGOLARITÀ: SORICAL provvederà agli interventi tecnici necessari per ripristinare i livelli garantiti;
-  b) Se la verifica conferma REGOLARITÀ dei parametri: i costi di verifica potranno essere addebitati all'Utente.
-
-SORICAL programmerà l'intervento di sopralluogo e comunicherà all'Utente data e fascia oraria con adeguato preavviso.
+Sopralluogo sarà programmato con preavviso.
 ` + chiusura(d);
 }
 
-function elaboraMorosita(d) {
+function rispostaMorosita(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: FONDATO — ISTRUTTORIA URGENTE AVVIATA
+ESITO: FONDATO — ISTRUTTORIA URGENTE AVVIATA
 
-In riscontro al reclamo relativo alla sospensione/limitazione della fornitura, SORICAL S.p.A. comunica quanto segue.
+Sospensione/limitazione fornitura${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
+${dd.importi ? 'Importi oggetto di morosità: '+dd.importi.join(', ')+'.\n' : ''}
+INDENNIZZI AUTOMATICI:
+  • € 10: sospensione anticipata, o in pendenza rateizzazione, o senza sollecito bonario;
+  • € 30: sospensione utente non disalimentabile, domestico residente, senza comunicazione mora, o nonostante pagamento comunicato.
 
-NORMATIVA: Art. 7.4-7.5 REMSI ARERA, Art. 44-47 All. A Del. ARERA 655/2015/R/IDR, Carta dei Servizi SORICAL § 4.4.7 e Scheda 3.
+RIATTIVAZIONE: 2 gg feriali dall'attestazione pagamento${dd.importi ? ' di '+dd.importi.join(', ') : ''} (indennizzo € 30).
 
-INDENNIZZI AUTOMATICI PREVISTI:
+DIVIETI: No sospensione festivi, prefestivi, sabato, né per servizi diversi da SII.
 
-  • € 10 se la fornitura è stata limitata/sospesa/disattivata per morosità:
-     - in anticipo rispetto al termine indicato nella comunicazione di mora; oppure
-     - pur avendo l'Utente inoltrato richiesta di rateizzazione nei termini; oppure
-     - in assenza di invio del sollecito bonario di pagamento.
-
-  • € 30 se la fornitura è stata sospesa/disattivata:
-     - nei confronti di un utente finale NON DISALIMENTABILE;
-     - nei confronti di un utente domestico residente senza i presupposti di legge;
-     - in assenza della comunicazione formale di costituzione in mora;
-     - nonostante l'Utente avesse comunicato l'avvenuto pagamento nei termini.
-
-RIATTIVAZIONE: Ai sensi dell'art. 4.4.7 e Scheda 3 della Carta dei Servizi, SORICAL garantisce la riattivazione della fornitura entro 2 giorni feriali dalla data di ricevimento dell'attestazione di avvenuto pagamento (standard specifico soggetto a indennizzo di € 30 in caso di mancato rispetto).
-
-NOTA IMPORTANTE: La sospensione/disattivazione NON può essere eseguita nei giorni festivi, nei prefestivi, di sabato, né in caso di mancato pagamento di servizi diversi dal SII.
-
-Si invita l'Utente a comunicare tempestivamente l'avvenuto pagamento, se effettuato, tramite PEC a reclami.soricalspa.it@pec.it con allegata ricevuta di pagamento, al fine di ottenere la riattivazione nel più breve tempo possibile.
+Comunicare pagamento via PEC a reclami.soricalspa.it@pec.it con ricevuta allegata.
 ` + chiusura(d);
 }
 
-function elaboraInterruzione(d) {
+function rispostaInterruzione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN VERIFICA TECNICA
+ESITO: AMMESSO — IN VERIFICA TECNICA
 
-In riscontro alla segnalazione relativa alla sospensione/interruzione del servizio, SORICAL S.p.A. comunica quanto segue.
+Interruzione servizio${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
+${dd.date && dd.date.length ? 'Date segnalate: '+dd.date.join(', ')+'.\n' : ''}
+STANDARD (indennizzo € 30 ciascuno):
+  • Max sospensione programmata: 24 ore;
+  • Servizio sostitutivo emergenza: entro 48 ore;
+  • Preavviso interruzioni programmate: 48 ore.
 
-NORMATIVA: Del. ARERA 917/2017/R/IDR (RQTI), Carta dei Servizi SORICAL § 4.5 e Scheda 4.
+Pronto intervento: 180 min (90% chiamate). Risposta: < 120 sec.
 
-STANDARD GARANTITI (standard specifici soggetti a indennizzo automatico di € 30):
-  • Durata massima della singola sospensione programmata: 24 ore;
-  • Tempo massimo per attivazione servizio sostitutivo di emergenza: 48 ore dall'inizio dell'interruzione;
-  • Preavviso minimo per interruzioni programmate: 48 ore (tramite avviso sul sito, affissioni o notifica diretta agli Utenti).
-
-STANDARD GENERALE (non soggetto a indennizzo individuale):
-  • Tempo di arrivo sul luogo di chiamata per pronto intervento: 180 minuti (90% delle chiamate);
-  • Risposta chiamata pronto intervento: < 120 secondi.
-
-Qualora l'interruzione abbia superato i 24 ore ovvero non sia stato attivato il servizio sostitutivo di emergenza entro 48 ore ovvero non siano state rispettate le 48 ore di preavviso per interruzioni programmate, SORICAL è tenuta a corrispondere all'Utente l'indennizzo automatico di € 30,00 per ogni standard specifico non rispettato.
-
-L'indennizzo sarà accreditato automaticamente nella prima bolletta utile.
-
-Per emergenze idriche è disponibile H24 il Numero Verde Pronto Intervento: 800.069.129.
+N. Verde Pronto Intervento H24: 800.069.129.
 ` + chiusura(d);
 }
 
-function elaboraQualitaAcqua(d) {
+function rispostaQualitaAcqua(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — ANALISI IN CORSO
+ESITO: AMMESSO — ANALISI IN CORSO
 
-In riscontro alla segnalazione relativa alla qualità dell'acqua erogata, SORICAL S.p.A. comunica quanto segue.
+Segnalazione qualità acqua${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
 
-NORMATIVA: D.Lgs. 31/2001 (e s.m.i.), D.Lgs. 18/2023 (recepimento Direttiva UE 2020/2184), Carta dei Servizi SORICAL § 4.7.
+PARAMETRI GARANTITI: colore/odore/sapore accettabili, coliformi 0/100ml, pH 6.5-9.5, residuo secco ≤ 1500 mg/l.
 
-PARAMETRI DI QUALITÀ GARANTITI:
-  • Colore, odore, sapore: accettabili per i consumatori, senza variazioni anomale;
-  • Batteri coliformi: 0/100 ml;
-  • Concentrazione ioni H+ (pH): tra 6,5 e 9,5;
-  • Torbidità: senza variazioni anomale;
-  • Residuo secco a 180°C: max consigliato 1.500 mg/l;
-  • Disinfettante residuo: min. consigliato 0,2 mg/l.
+SORICAL procederà ad analisi del punto di consegna. In caso di anomalie: provvedimenti tecnici + comunicazione scritta.
 
-Il Gestore è tenuto a garantire la conformità dei parametri di qualità dell'acqua distribuita per il consumo umano e a dare comunicazione tempestiva all'Utente di eventuali anomalie riscontrate.
-
-AZIONE INTRAPRESA: SORICAL ha preso in carico la segnalazione e procederà ad eseguire le analisi del punto di consegna indicato dall'Utente. In caso di anomalie confermate, verranno adottati i provvedimenti tecnici necessari e sarà data comunicazione scritta all'Utente dei risultati.
-
-Si informa che, in caso di emergenza legata alla qualità dell'acqua, SORICAL attiva il servizio sostitutivo di erogazione idrica entro 48 ore.
-
-Per segnalazioni urgenti è disponibile il Numero Verde Pronto Intervento: 800.069.129 (H24).
+In emergenza: servizio sostitutivo entro 48h. Pronto Intervento H24: 800.069.129.
 ` + chiusura(d);
 }
 
-function elaboraAppuntamento(d) {
+function rispostaAppuntamento(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: FONDATO — INDENNIZZO AUTOMATICO DOVUTO
+ESITO: FONDATO — INDENNIZZO DOVUTO
 
-In riscontro al reclamo relativo al mancato rispetto dell'appuntamento concordato, SORICAL S.p.A. comunica quanto segue.
+Mancato rispetto appuntamento${dd.date && dd.date.length ? ' del '+dd.date[0] : ''}${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
 
-NORMATIVA: Art. 20 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.3.5 e Scheda 2.
+  • Fascia puntualità: 3 ore (indennizzo € 30);
+  • Fissazione appuntamento: 7 gg lav;
+  • Preavviso disdetta: 24 ore.
 
-STANDARD GARANTITI:
-  • Fascia di puntualità per gli appuntamenti: 3 ore (standard SPECIFICO soggetto a indennizzo automatico di € 30 per ogni appuntamento non rispettato);
-  • Tempo massimo per la fissazione di un appuntamento: 7 giorni lavorativi dalla richiesta (standard generale);
-  • Preavviso minimo per disdetta appuntamento: 24 ore (standard generale).
+Indennizzo € 30 accreditato in prima bolletta utile entro 180 gg.
 
-La fascia di puntualità di 3 ore rappresenta il periodo di tempo entro il quale il personale SORICAL è tenuto a presentarsi, a partire dall'orario concordato con l'Utente.
-
-ESITO: Verificata la circostanza del mancato rispetto della fascia di puntualità concordata, SORICAL è tenuta a corrispondere all'Utente l'indennizzo automatico di € 30,00, che sarà accreditato nella prima bolletta utile entro 180 giorni dalla formazione dell'obbligo.
-
-SORICAL si scusa per il disagio arrecato e provvederà a fissare un nuovo appuntamento nel più breve tempo possibile, contattando direttamente l'Utente.
+Nuovo appuntamento sarà fissato contattando direttamente l'Utente.
 ` + chiusura(d);
 }
 
-function elaboraInformazione(d) {
+function rispostaInformazione(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO: RISPOSTA A RICHIESTA DI INFORMAZIONI
+ESITO: RISPOSTA A RICHIESTA INFORMAZIONI
 
-In riscontro alla richiesta di informazioni/chiarimenti pervenuta, SORICAL S.p.A. fornisce le seguenti informazioni.
+Risposta motivata entro 30 gg lav (indennizzo € 30 se non rispettato).
+${dd.indirizzo ? '\nFornitura di riferimento: '+dd.indirizzo+'.' : ''}
 
-NORMATIVA: Art. 23 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.3.10.
+CONTATTI SORICAL:
+  • Sito: www.soricalspa.com
+  • N. Verde Commerciale: 800.069.127 / 0961.76.76.21
+  • N. Verde Pronto Intervento: 800.069.129
+  • PEC: reclami.soricalspa.it@pec.it
+  • Portale MySorical: autolettura e gestione utenza online
 
-Si informa l'Utente che il tempo di risposta motivata alle richieste scritte di informazione è di 30 giorni lavorativi dalla data di ricezione (standard specifico soggetto a indennizzo automatico di € 30 in caso di superamento).
-
-La presente risposta è stata elaborata nei termini previsti dalla normativa.
-
-INFORMAZIONI GENERALI SUL SERVIZIO SORICAL:
-  • Sito internet: www.soricalspa.com
-  • Numero Verde Commerciale: 800.069.127 (da rete fissa) / 0961.76.76.21 (da mobile)
-  • Numero Verde Pronto Intervento: 800.069.129
-  • PEC Commerciale/Reclami: reclami.soricalspa.it@pec.it
-  • Sportelli territoriali: orari e indirizzi su www.soricalspa.com
-  • Carta dei Servizi: disponibile su www.soricalspa.com
-  • Autolettura contatore: disponibile tramite call-center o portale online MySorical
-
-[AGGIUNGERE QUI LE INFORMAZIONI SPECIFICHE RICHIESTE DALL'UTENTE]
-
-Per ulteriori chiarimenti, l'Utente può contattare il Servizio Commerciale negli orari indicati sul sito istituzionale.
+[INSERIRE QUI RISPOSTA SPECIFICA ALLA RICHIESTA DELL'UTENTE]
 ` + chiusura(d);
 }
 
-function elaboraLavori(d) {
+function rispostaLavori(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: AMMESSO — IN FASE DI VERIFICA
+ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In riscontro al reclamo relativo al ritardo nell'esecuzione dei lavori, si comunicano i termini normativi applicabili.
+Ritardo lavori${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
+${dd.date && dd.date.length ? 'Date di riferimento: '+dd.date.join(', ')+'.\n' : ''}
+  • Preventivo senza sopralluogo: 10 gg lav (indennizzo € 30);
+  • Preventivo con sopralluogo: 20 gg lav (indennizzo € 30);
+  • Lavori semplici: 10 gg lav dall'accettazione (indennizzo € 30);
+  • Lavori complessi: ≤ 30 gg lav.
 
-NORMATIVA: Art. 35-37 All. A Del. ARERA 655/2015/R/IDR (RQSII), Carta dei Servizi SORICAL § 4.4.15-4.4.16 e Scheda 3.
+Tempi al netto di autorizzazioni enti terzi e adempimenti Utente.
 
-STANDARD GARANTITI:
-  • Preventivazione lavori senza sopralluogo: 10 giorni lavorativi dalla richiesta (indennizzo € 30);
-  • Preventivazione lavori con sopralluogo: 20 giorni lavorativi (indennizzo € 30);
-  • Esecuzione lavori semplici: 10 giorni lavorativi dall'accettazione del preventivo (indennizzo € 30);
-  • Esecuzione lavori complessi: ≤ 30 giorni lavorativi (standard generale, 90% singole prestazioni).
-
-NOTA: I tempi di esecuzione si calcolano al netto del tempo necessario per:
-  a) il rilascio di autorizzazioni da parte di Enti terzi (a condizione che SORICAL abbia richiesto il primo atto autorizzativo entro 30 gg lavorativi dall'accettazione del preventivo);
-  b) l'esecuzione di opere edili o altri adempimenti a carico dell'Utente.
-
-In caso di ritardi riconducibili a SORICAL, l'Utente ha diritto all'indennizzo automatico di € 30 per ogni standard specifico non rispettato.
-
-Si sta verificando lo stato d'avanzamento della pratica e si provvederà a comunicare il nuovo termine programmato.
+Verifica stato avanzamento in corso.
 ` + chiusura(d);
 }
 
-function elaboraGenerico(d) {
+function rispostaGenerico(d) {
+  const dd = d.dati;
   return intestazione(d) + `
-ESITO DEL RECLAMO: PRESO IN CARICO — IN ISTRUTTORIA
+ESITO: PRESO IN CARICO — IN ISTRUTTORIA
 
-In riscontro al reclamo pervenuto, SORICAL S.p.A. comunica quanto segue.
+SORICAL ha avviato istruttoria per verificare i fatti esposti e fornire risposta motivata.
+${dd.fatture ? '\nFatture citate: '+dd.fatture.join(', ')+'.' : ''}${dd.importi ? '\nImporti indicati: '+dd.importi.join(', ')+'.' : ''}${dd.indirizzo ? '\nFornitura: '+dd.indirizzo+'.' : ''}${dd.matricola ? '\nContatore: matr. '+dd.matricola+'.' : ''}
 
-SORICAL ha preso in carico la segnalazione ed ha avviato la necessaria istruttoria per verificare i fatti esposti e fornire una risposta completa e motivata.
+Termine risposta: 30 gg lavorativi (indennizzo € 30 se non rispettato).
 
-Ai sensi dell'art. 4.3.9 della Carta dei Servizi e dell'art. 23 All. A della Del. ARERA 655/2015/R/IDR (RQSII), il termine per la risposta motivata ai reclami scritti è di 30 giorni lavorativi dalla data di ricezione del reclamo stesso (standard specifico soggetto a indennizzo automatico di € 30 in caso di mancato rispetto).
-
-Qualora la complessità del reclamo non consenta il rispetto del termine previsto, SORICAL comunicherà all'Utente lo stato d'avanzamento della pratica e il nuovo termine stimato, ai sensi dell'art. 4.3.9 della Carta dei Servizi.
-
-L'eventuale indennizzo automatico sarà accreditato nella prima bolletta utile entro 180 giorni solari dalla formazione dell'obbligo, con specifica causale "Indennizzo automatico per mancato rispetto dei livelli specifici di qualità contrattuale".
-
-SORICAL rimane a disposizione per qualsiasi ulteriore chiarimento tramite i canali di contatto istituzionali.
+Indennizzo automatico accreditato in prima bolletta utile entro 180 gg con causale "Indennizzo automatico per mancato rispetto dei livelli specifici di qualità contrattuale".
 ` + chiusura(d);
 }
 
-// ─────────────────────────────────────────────────────────────
-// UTILITÀ
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════════════════════════
 function copiaRisposta() {
   const out = document.getElementById('output-area');
   if (!out.value) { alert('Genera prima la risposta.'); return; }
@@ -1061,11 +1072,7 @@ function copiaRisposta() {
     const msg = document.getElementById('copy-msg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 2500);
-  }).catch(() => {
-    out.select();
-    document.execCommand('copy');
-    alert('Risposta copiata!');
-  });
+  }).catch(() => { out.select(); document.execCommand('copy'); });
 }
 
 function pulisciTutto() {
@@ -1079,21 +1086,159 @@ function pulisciTutto() {
   document.getElementById('lettura-contatore').value = '';
   document.getElementById('lettura-box').classList.remove('show');
   document.getElementById('cat-select').value = 'auto';
-  document.getElementById('categoria-info').innerHTML = '<em style="color:#aaa">La categoria verrà rilevata automaticamente dopo aver incollato il testo.</em>';
-  document.getElementById('norma-box').style.display = 'none';
+  document.getElementById('cat-detected').innerHTML = '';
+  document.getElementById('norma-box').classList.remove('show');
+  document.getElementById('file-info').classList.remove('show');
+  document.getElementById('thumb-wrap').style.display = 'none';
+  document.getElementById('upload-zone').classList.remove('has-file');
+  document.getElementById('upload-icon').textContent = '📧';
+  document.getElementById('upload-label').textContent = 'Trascina qui il file o clicca per selezionare';
+  setStep(1);
 }
 
-// Data odierna di default
-document.getElementById('data-reclamo').valueAsDate = new Date();
+// ═══════════════════════════════════════════════════════════════
+// IMAGE PREPROCESSING (grayscale + contrasto + Otsu)
+// ═══════════════════════════════════════════════════════════════
+function preprocessBlob(blob) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'), ctx = c.getContext('2d');
+      let w = img.width, h = img.height;
+      const mx = 2500;
+      if (w > mx || h > mx) { const r = Math.min(mx/w, mx/h); w = Math.round(w*r); h = Math.round(h*r); }
+      c.width = w; c.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      const id = ctx.getImageData(0, 0, w, h), px = id.data;
+      for (let i = 0; i < px.length; i += 4) { const g = .299*px[i]+.587*px[i+1]+.114*px[i+2]; px[i]=px[i+1]=px[i+2]=g; }
+      const f = 1.7;
+      for (let i = 0; i < px.length; i += 4) { px[i]=Math.min(255,Math.max(0,f*(px[i]-128)+128)); px[i+1]=px[i]; px[i+2]=px[i]; }
+      const hist = new Array(256).fill(0);
+      for (let i = 0; i < px.length; i += 4) hist[px[i]]++;
+      const tot = w*h; let sum=0,sB=0,wB=0,wF,maxV=0,thr=128;
+      for (let i=0;i<256;i++) sum+=i*hist[i];
+      for (let i=0;i<256;i++){wB+=hist[i];if(!wB)continue;wF=tot-wB;if(!wF)break;sB+=i*hist[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>maxV){maxV=v;thr=i;}}
+      for (let i=0;i<px.length;i+=4){const v=px[i]>=thr?255:0;px[i]=px[i+1]=px[i+2]=v;}
+      ctx.putImageData(id,0,0);
+      c.toBlob(b=>resolve(b),'image/png');
+    };
+    img.src = URL.createObjectURL(blob);
+  });
+}
 
-// ─────────────────────────────────────────────────────────────
-// OCR — Tesseract.js
-// ─────────────────────────────────────────────────────────────
+function preprocessImage(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      fetch(e.target.result).then(r=>r.blob()).then(b=>preprocessBlob(b).then(resolve));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PDF.js → canvas blobs
+// ═══════════════════════════════════════════════════════════════
+async function pdfToImageBlobs(file, scale) {
+  const pdfjsLib = await window._pdfjsReady;
+  const buf = file instanceof Blob ? await file.arrayBuffer() : file;
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const blobs = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const vp = page.getViewport({scale: scale||2.5});
+    const c = document.createElement('canvas');
+    c.width = vp.width; c.height = vp.height;
+    await page.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+    blobs.push(await new Promise(r => c.toBlob(r, 'image/png')));
+  }
+  return blobs;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARSER EML (RFC 2822 + MIME multipart)
+// ═══════════════════════════════════════════════════════════════
+function parseEml(raw) {
+  const res = {headers:{}, body:'', html:'', attachments:[]};
+  const hEnd = raw.search(/\r?\n\r?\n/);
+  if (hEnd === -1) { res.body = raw; return res; }
+  const hBlock = raw.substring(0, hEnd).replace(/\r?\n([ \t])/g, ' ');
+  const bBlock = raw.substring(hEnd).replace(/^\r?\n\r?\n/, '');
+
+  for (const line of hBlock.split(/\r?\n/)) {
+    const m = line.match(/^([\w-]+):\s*(.*)/);
+    if (m) res.headers[m[1].toLowerCase()] = m[2].trim();
+  }
+
+  function decH(v) {
+    if (!v) return '';
+    return v.replace(/=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g, (_,ch,enc,txt) => {
+      if (enc.toUpperCase()==='B') { try{const b=atob(txt),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new TextDecoder(ch).decode(a);}catch(e){return txt;} }
+      return txt.replace(/_/g,' ').replace(/=([0-9A-Fa-f]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));
+    });
+  }
+  for (const k in res.headers) res.headers[k] = decH(res.headers[k]);
+
+  function decBody(txt, enc, ct) {
+    if (enc==='base64') { const c=txt.replace(/\s/g,''); try{const b=atob(c),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);const m=(ct||'').match(/charset="?([^";]+)/i);return new TextDecoder(m?m[1]:'utf-8').decode(a);}catch(e){return txt;} }
+    if (enc==='quoted-printable') return txt.replace(/=\r?\n/g,'').replace(/=([0-9A-Fa-f]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));
+    return txt;
+  }
+
+  function stripHtml(h) {
+    const d=document.createElement('div');
+    d.innerHTML=h.replace(/<br\s*\/?>/gi,'\n').replace(/<\/p>/gi,'\n\n').replace(/<\/div>/gi,'\n').replace(/<\/li>/gi,'\n').replace(/<\/tr>/gi,'\n');
+    return d.textContent||d.innerText||'';
+  }
+
+  const ct = res.headers['content-type']||'text/plain';
+  const te = (res.headers['content-transfer-encoding']||'').toLowerCase();
+  const bndM = ct.match(/boundary="?([^";\s]+)"?/i);
+
+  if (bndM) { parseParts(bBlock, bndM[1], res); }
+  else {
+    const dec = decBody(bBlock, te, ct);
+    if (ct.includes('text/html')) { res.html=dec; res.body=stripHtml(dec); }
+    else res.body = dec;
+  }
+
+  function parseParts(block, bnd, r) {
+    const parts = block.split(new RegExp('--'+bnd.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+    for (let i=1;i<parts.length;i++) {
+      const p=parts[i]; if(p.trim()==='--'||p.trim().startsWith('--'))continue;
+      const pe=p.search(/\r?\n\r?\n/); if(pe===-1)continue;
+      const ph={}; const phB=p.substring(0,pe).replace(/\r?\n([ \t])/g,' ');
+      for(const l of phB.split(/\r?\n/)){const m=l.match(/^([\w-]+):\s*(.*)/);if(m)ph[m[1].toLowerCase()]=m[2].trim();}
+      const pb=p.substring(pe).replace(/^\r?\n\r?\n/,'');
+      const pCt=(ph['content-type']||'text/plain').toLowerCase();
+      const pE=(ph['content-transfer-encoding']||'').toLowerCase();
+      const pD=(ph['content-disposition']||'').toLowerCase();
+      const nb=pCt.match(/boundary="?([^";\s]+)"?/i);
+      if(nb){parseParts(pb,nb[1],r);continue;}
+      if(pCt.includes('text/plain')&&!pD.includes('attachment')){const d=decBody(pb,pE,pCt);r.body=r.body?r.body+'\n\n'+d:d;}
+      else if(pCt.includes('text/html')&&!pD.includes('attachment')){const d=decBody(pb,pE,pCt);r.html=d;if(!r.body)r.body=stripHtml(d);}
+      else if(pCt.startsWith('image/')||pCt==='application/pdf'||pD.includes('attachment')||pD.includes('inline')){
+        const nm=(pD+' '+pCt).match(/(?:filename|name)="?([^";\r\n]+)"?/i);
+        const fn=nm?decH(nm[1].trim()):'allegato';
+        const cl=pb.replace(/\s/g,'');
+        try{const b=atob(cl),a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);
+        let mt=pCt.split(';')[0].trim();
+        if(mt==='application/octet-stream'){const x=fn.split('.').pop().toLowerCase();const mm={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png'};mt=mm[x]||mt;}
+        r.attachments.push({filename:fn,blob:new Blob([a],{type:mt}),type:mt});
+        }catch(e){}
+      }
+    }
+  }
+  return res;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILE HANDLER PRINCIPALE
+// ═══════════════════════════════════════════════════════════════
 function handleDrop(e) {
   e.preventDefault();
   document.getElementById('upload-zone').classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f) handleFile(f);
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 }
 
 // ─────────────────────────────────────────────────────────────
