@@ -1427,20 +1427,37 @@ function getCharset(contentType) {
 function decodeTransferEncoding(body, encoding) {
   const enc = (encoding || '').toLowerCase().trim();
   if (enc === 'base64') {
-    try { return atob(body.replace(/[\s\r\n]/g, '')); } catch(e) { return body; }
+    try {
+      const bin = atob(body.replace(/[\s\r\n]/g, ''));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return { bytes, raw: bin };
+    } catch(e) { return { bytes: null, raw: body }; }
   }
   if (enc === 'quoted-printable') {
-    return body.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
+    const raw = body.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
       String.fromCharCode(parseInt(h, 16)));
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return { bytes, raw };
   }
-  return body;
+  return { bytes: null, raw: body };
 }
 
 function decodeTextPart(body, encoding, contentType) {
-  let decoded = decodeTransferEncoding(body, encoding);
-  // Applica charset
-  const cs = getCharset(contentType);
-  if (cs.includes('utf-8') || cs.includes('utf8')) decoded = decodeUtf8(decoded);
+  const { bytes, raw } = decodeTransferEncoding(body, encoding);
+  const cs = getCharset(contentType) || 'utf-8';
+  let decoded;
+  if (bytes) {
+    try { decoded = new TextDecoder(cs, { fatal: false }).decode(bytes); }
+    catch(e) {
+      try { decoded = new TextDecoder('utf-8', { fatal: false }).decode(bytes); }
+      catch(e2) { decoded = raw; }
+    }
+  } else {
+    decoded = raw;
+    if (cs.includes('utf-8') || cs.includes('utf8')) decoded = decodeUtf8(decoded);
+  }
   // Se HTML, converti a testo
   if ((contentType || '').toLowerCase().includes('text/html')) {
     decoded = decoded
