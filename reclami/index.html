@@ -765,18 +765,29 @@ function rispostaFatturazione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-SORICAL ha preso in carico la segnalazione relativa alla fatturazione${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''} e provvederà alle verifiche tecniche e contabili.
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 36 All. A Del. ARERA 655/2015/R/IDR (RQSII): il Gestore è tenuto a garantire che la fatturazione avvenga sulla base di dati di misura effettivi o, in subordine, di autoletture validate dall'Utente.
+  • Art. 38 RQSII: in caso di fatturazione errata, il Gestore procede alla rettifica d'ufficio o su richiesta dell'Utente, con accredito/addebito nella prima bolletta utile ovvero mediante rimessa diretta entro 60 giorni lavorativi.
+  • Art. 39 RQSII: per le bollette di importo anomalo (superiore al doppio dell'addebito medio degli ultimi 12 mesi), il Gestore è tenuto alla comunicazione preventiva prima dell'emissione.
+  • Art. 42 RQSII: l'Utente ha diritto alla rateizzazione della bolletta che superi dell'80% il valore dell'addebito medio.
+  • L. 205/2017, art. 1, commi 4-6; Del. ARERA 311/2019/R/IDR: prescrizione biennale — i corrispettivi riferiti a consumi risalenti a più di 2 anni dalla data di emissione della fattura non possono essere richiesti al cliente finale.
+  • Carta dei Servizi SORICAL, § 4.4.1, 4.4.5, 4.4.8.
 
-Ai sensi dell'art. 4.4.1 della Carta dei Servizi e dell'art. 38 All. A Del. ARERA 655/2015/R/IDR:
-  • la fatturazione è basata su letture effettive, autoletture validate o stime;
-  • errori in eccesso/difetto vengono corretti d'ufficio o su richiesta;
-  • risposta motivata al reclamo: 30 gg lavorativi (indennizzo € 30);
-  • rettifica e accredito somma non dovuta: 60 gg lavorativi (indennizzo € 30).
-${dd.importi ? '\nImporti contestati: ' + dd.importi.join(', ') + '. Se confermato errore, accredito in prima bolletta utile o rimessa diretta.' : ''}
-${dd.consumoMc ? 'Consumo dichiarato dall\'Utente: ' + dd.consumoMc + ' mc — sarà confrontato con storico letture.' : ''}
-${dd.periodo ? 'Periodo contestato: ' + dd.periodo + '.' : ''}
+VERIFICHE IN CORSO:
+SORICAL ha preso in carico la segnalazione relativa alla fatturazione${dd.fatture ? ' (' + dd.fatture.join(', ') + ')' : ''} e provvederà alle seguenti verifiche:
+  1. Controllo correttezza dei dati di misura utilizzati per la fatturazione;
+  2. Verifica della corretta applicazione delle tariffe vigenti approvate da ARRICAL;
+  3. Controllo della corretta imputazione delle voci di costo (quota fissa, quota variabile, oneri accessori, deposito cauzionale);
+  4. Verifica di eventuali partite pregresse e relativa esigibilità ai sensi della prescrizione biennale.
+${dd.importi ? '\nImporti contestati dall\'Utente: ' + dd.importi.join(', ') + '.' : ''}${dd.consumoMc ? '\nConsumo dichiarato dall\'Utente: ' + dd.consumoMc + ' mc — sarà confrontato con lo storico delle letture effettive.' : ''}${dd.periodo ? '\nPeriodo contestato: ' + dd.periodo + '.' : ''}
 
-Consumi risalenti a più di 2 anni non possono essere richiesti (L. 205/2017, Del. ARERA 311/2019/R/IDR).
+STANDARD DI QUALITÀ GARANTITI (Tab. 2-3 All. A RQSII):
+  • Tempo massimo di risposta motivata al reclamo: 30 giorni lavorativi — Indennizzo automatico: € 30.
+  • Tempo massimo di rettifica di fatturazione: 60 giorni lavorativi — Indennizzo automatico: € 30.
+  • Accredito somme non dovute: nella prima bolletta utile o tramite rimessa diretta.
+  • Indennizzo crescente: € 60 se tra 2× e 3× lo standard; € 90 se oltre 3× lo standard.
+
+In caso di accertata erroneità della fatturazione, SORICAL provvederà alla rettifica e all'accredito delle somme non dovute, comprensivo degli interessi legali, nella prima bolletta utile.
 ` + chiusura(d);
 }
 
@@ -785,17 +796,29 @@ function rispostaConguaglio(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-In merito al conguaglio${dd.fatture ? ' relativo a '+dd.fatture.join(', ') : ''} contestato:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 26-28 All. A Del. ARERA 655/2015/R/IDR (RQSII): il Gestore è tenuto ad effettuare almeno 2 tentativi di raccolta della misura all'anno per utenze con consumo ≤ 3.000 mc/anno, e almeno 3 tentativi per consumi > 3.000 mc/anno, con distribuzione temporale omogenea.
+  • Art. 30 RQSII: in assenza di lettura effettiva, la fatturazione avviene su base stimata; il riallineamento ai consumi effettivi deve avvenire alla prima lettura disponibile.
+  • Art. 31 RQSII: in caso di consumo anomalo (superiore al doppio del consumo medio), il Gestore è tenuto a comunicarlo tempestivamente all'Utente prima della fatturazione.
+  • Art. 36-38 RQSII: la fattura di conguaglio deve dettagliare i consumi effettivi vs stimati per ciascun periodo.
+  • L. 205/2017, art. 1, commi 4-6; Del. ARERA 311/2019/R/IDR: i corrispettivi riferiti a consumi risalenti a più di 2 anni non sono esigibili.
+  • Carta dei Servizi SORICAL, § 4.4.1, 4.4.4, 4.4.9.
 
-1. LETTURE: La fatturazione si basa su letture effettive. In caso di stima, sarà riallineata alla prima lettura disponibile.${dd.letture ? ' Letture indicate: '+dd.letture.join(', ')+' — saranno verificate.' : ''}
+VERIFICHE IN CORSO:
+${dd.fatture ? 'Fatture contestate: ' + dd.fatture.join(', ') + '.\n' : ''}${dd.letture ? 'Letture indicate dall\'Utente: ' + dd.letture.join(', ') + ' — saranno verificate.\n' : ''}${dd.consumoMc ? 'Consumo segnalato: ' + dd.consumoMc + ' mc — confronto con storico in corso.\n' : ''}
+  1. Verifica cronologia completa delle letture effettive e stimate${dd.matricola ? ' del contatore matr. ' + dd.matricola : ''};
+  2. Controllo rispetto della frequenza minima di raccolta misura (art. 26-28 RQSII);
+  3. Verifica corretta applicazione dei criteri di stima e riallineamento;
+  4. Accertamento eventuale consumo anomalo e relativo obbligo di comunicazione preventiva;
+  5. Verifica esigibilità consumi ai sensi della prescrizione biennale.
 
-2. PRESCRIZIONE BIENNALE: Consumi >2 anni dalla data bolletta non addebitabili (L. 205/2017).
+STANDARD DI QUALITÀ GARANTITI:
+  • Risposta motivata al reclamo: 30 gg lav — Indennizzo: € 30.
+  • Rettifica fatturazione: 60 gg lav — Indennizzo: € 30.
+  • Mancata raccolta misura: Indennizzo € 30 per ogni tentativo mancante (art. 28 RQSII).
+  • Mancata comunicazione consumo anomalo: rettifica d'ufficio su tariffa agevolata.
 
-3. RACCOLTA MISURA: Garantiti min 2 tentativi/anno (≤3.000 mc) o 3/anno (>3.000 mc). Indennizzo € 30 se non rispettato.
-
-4. CONSUMO ANOMALO: SORICAL comunica tempestivamente anomalie (art. 4.4.9 CdS).${dd.consumoMc ? ' Consumo segnalato: '+dd.consumoMc+' mc — confronto con storico in corso.' : ''}
-
-Verifica cronologia letture${dd.matricola ? ' contatore matr. '+dd.matricola : ''} in corso.
+In caso di accertata incongruenza tra consumi stimati e consumi effettivi, SORICAL provvederà alla rettifica con accredito delle somme non dovute.
 ` + chiusura(d);
 }
 
@@ -804,23 +827,30 @@ function rispostaPerditaOcculta(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — ISTRUTTORIA AVVIATA
 
-Rettifica per perdita occulta ai sensi Del. ARERA 609/2021/R/IDR e art. 4.4.2 CdS.
+QUADRO NORMATIVO APPLICABILE:
+  • Del. ARERA 609/2021/R/IDR (art. 3-5): disciplina della rettifica di fatturazione per perdita occulta a valle del misuratore. Il Gestore è tenuto alla rettifica quando il consumo risulti anomalo rispetto allo storico, a condizione che la perdita sia stata riparata.
+  • Art. 4, c. 1 Del. 609/2021: il consumo medio giornaliero nel periodo della perdita deve risultare almeno pari al doppio del consumo medio giornaliero calcolato sulla base dei dati degli ultimi 2 anni.
+  • Art. 5 Del. 609/2021: il ricalcolo avviene applicando la tariffa agevolata (metà della tariffa base) sul volume eccedente il consumo medio, con esonero totale da quota fognatura e depurazione sulla quota eccedente.
+  • Carta dei Servizi SORICAL, § 4.4.2.
 
-CONDIZIONI ACCESSO:
-  a) Consumo${dd.consumoMc ? ' ('+dd.consumoMc+' mc)' : ''} ≥ doppio del consumo medio giornaliero ultimi 2 anni;
-  b) Perdita già riparata dall'Utente.
+CONDIZIONI DI ACCESSO ALLA RETTIFICA:
+  a) Consumo${dd.consumoMc ? ' (' + dd.consumoMc + ' mc)' : ''} nel periodo anomalo ≥ 2× consumo medio giornaliero ultimi 2 anni;
+  b) Perdita già riparata dall'Utente a proprie spese;
+  c) Documentazione presentata entro il termine della prima fattura utile successiva alla riparazione.
 
 DOCUMENTAZIONE NECESSARIA:
-  1. Descrizione e foto intervento riparazione;
-  2. Foto contatore${dd.matricola ? ' (matr. '+dd.matricola+')' : ''} prima e dopo;
-  3. Fattura spese riparazione.
+  1. Descrizione dettagliata dell'intervento di riparazione con foto;
+  2. Foto del contatore${dd.matricola ? ' (matr. ' + dd.matricola + ')' : ''} prima e dopo la riparazione;
+  3. Fattura/ricevuta delle spese di riparazione sostenute;
+  4. Eventuale perizia tecnica attestante la natura occulta della perdita.
 
-RICALCOLO (se accolto):
-  • Storno importo fatturato${dd.importi ? ' ('+dd.importi.join(', ')+')' : ''};
-  • Acquedotto: metà tariffa base su volume eccedente;
-  • Esonero fognatura/depurazione su eccedenza.
+MODALITÀ DI RICALCOLO (se accolto — art. 5 Del. 609/2021):
+  • Storno dell'importo fatturato${dd.importi ? ' (' + dd.importi.join(', ') + ')' : ''};
+  • Acquedotto: applicazione della metà della tariffa base sul volume eccedente il consumo medio;
+  • Fognatura e depurazione: esonero totale sulla quota eccedente il consumo medio;
+  • Accredito differenza in prima bolletta utile o rimessa diretta.
 
-Documentazione da inviare via PEC a reclami.soricalspa.it@pec.it entro 3 mesi dalla fattura contestata${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''}.
+Inviare documentazione via PEC a reclami.soricalspa.it@pec.it${dd.fatture ? ' con riferimento a ' + dd.fatture.join(', ') : ''}.
 ` + chiusura(d);
 }
 
@@ -829,13 +859,21 @@ function rispostaPrescrizione(d) {
   return intestazione(d) + `
 ESITO: FONDATO — ACCOGLIMENTO
 
-Ai sensi della L. 205/2017 art. 1 c. 4 e Del. ARERA 311/2019/R/IDR, i corrispettivi riferiti a consumi risalenti a più di 2 anni non possono essere richiesti.
+QUADRO NORMATIVO APPLICABILE:
+  • L. 205/2017 (Legge di Bilancio 2018), art. 1, commi 4-6: il diritto al corrispettivo si prescrive in 2 anni dal giorno in cui il pagamento avrebbe dovuto essere effettuato. La prescrizione si applica ai casi di mancata o erronea rilevazione dei dati di misura, nonché di ritardata fatturazione, salvo che il ritardo sia dovuto a causa imputabile all'Utente.
+  • Del. ARERA 311/2019/R/IDR: disciplina attuativa della prescrizione biennale nel SII. Il Gestore non può pretendere il pagamento di corrispettivi riferiti a consumi risalenti a più di 2 anni dalla data di emissione della fattura.
+  • Art. 7 Del. 311/2019: l'onere della prova circa l'imputabilità del ritardo all'Utente grava sul Gestore.
+  • Art. 8 Del. 311/2019: lo storno deve avvenire automaticamente, senza necessità di eccezione da parte dell'Utente.
+  • Carta dei Servizi SORICAL, § 4.4.4.
 
+PROVVEDIMENTI:
 SORICAL provvederà a:
-  1. Stornare dalle fatture contestate${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''} gli importi >2 anni;
-  2. Ricalcolare il debito residuo con sole somme esigibili;
-  3. Accreditare somme non dovute${dd.importi ? ' (segnalati: '+dd.importi.join(', ')+')' : ''} in prima bolletta utile o rimessa diretta.
-${dd.periodo ? '\nPeriodo contestato: '+dd.periodo+'.' : ''}
+  1. Individuare tutti i corrispettivi riferiti a consumi risalenti a più di 2 anni dalla data di emissione nelle fatture contestate${dd.fatture ? ' (' + dd.fatture.join(', ') + ')' : ''};
+  2. Stornare d'ufficio gli importi prescritti;
+  3. Ricalcolare il debito residuo con le sole somme legittimamente esigibili;
+  4. Accreditare le somme non dovute${dd.importi ? ' (importi segnalati: ' + dd.importi.join(', ') + ')' : ''} nella prima bolletta utile ovvero tramite rimessa diretta.
+${dd.periodo ? '\nPeriodo contestato: ' + dd.periodo + '.' : ''}
+L'Utente non è tenuto al pagamento degli importi prescritti e non può subire azioni di recupero o sospensione della fornitura per tali somme.
 ` + chiusura(d);
 }
 
@@ -844,17 +882,25 @@ function rispostaRateizzazione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — DIRITTO RATEIZZAZIONE RICONOSCIUTO
 
-Ai sensi art. 42 Del. ARERA 655/2015/R/IDR e art. 4.4.7 CdS:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 42, c. 1 All. A Del. ARERA 655/2015/R/IDR (RQSII): l'Utente ha diritto alla rateizzazione quando la bolletta supera dell'80% il valore dell'addebito medio riferito alle bollette emesse negli ultimi 12 mesi.
+  • Art. 42, c. 2 RQSII: quando l'importo supera del 150% l'addebito medio, il Gestore è tenuto ad allegare i bollettini per il pagamento rateale contestualmente alla bolletta.
+  • Art. 42, c. 3 RQSII: la rateizzazione deve garantire un numero minimo di rate pari alla durata del periodo oggetto di conguaglio, e comunque non inferiore a 12 mesi.
+  • Art. 42, c. 5 RQSII: gli interessi di mora non sono dovuti qualora il conguaglio derivi da ritardo nella fatturazione imputabile al Gestore.
+  • Art. 42, c. 6 RQSII: sospensione del piano di rateizzazione fino a 3 mesi per eventi eccezionali (perdita di lavoro, infortunio, ospedalizzazione, lutto familiare).
+  • Carta dei Servizi SORICAL, § 4.4.7.
 
-1. DIRITTO AUTOMATICO: Se fattura${dd.importi ? ' ('+dd.importi.join(', ')+')' : ''} supera +80% media ultimi 12 mesi. Oltre +150% → bollettini rateali automatici.
+CONDIZIONI DEL PIANO DI RATEIZZAZIONE:
+${dd.importi ? '  Importo bolletta: ' + dd.importi.join(', ') + '.\n' : ''}${dd.fatture ? '  Fatture oggetto di rateizzazione: ' + dd.fatture.join(', ') + '.\n' : ''}
+  • Numero rate: minimo 12 mesi, non cumulabili con altre rate in corso;
+  • Interessi: tasso di riferimento BCE vigente, non dovuti se ritardo imputabile al Gestore;
+  • Pagamento: tramite bollettini precompilati o addebito diretto;
+  • Decadenza: il mancato pagamento di 2 rate consecutive comporta la decadenza dal beneficio.
 
-2. PIANO MOROSITÀ: Min 12 mesi, rate non cumulabili.
+MODALITÀ DI RICHIESTA:
+Entro il 10° giorno dalla scadenza della fattura, presso sportello, call-center 800.069.127, PEC o portale MySorical.
 
-3. INTERESSI: Non dovuti se ritardo fatturazione imputabile al Gestore.
-
-4. CASI SPECIALI: Sospensione fino a 3 mesi per perdita lavoro, infortunio, ospedalizzazione, lutto.
-
-Richiesta entro 10° giorno dalla scadenza fattura${dd.fatture ? ' ('+dd.fatture.join(', ')+')' : ''}. Sportello, call-center 800.069.127 o www.soricalspa.com.
+La richiesta di rateizzazione sospende le procedure di morosità ai sensi dell'art. 7.5 REMSI ARERA.
 ` + chiusura(d);
 }
 
@@ -863,16 +909,24 @@ function rispostaVoltura(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-Voltura/subentro${dd.indirizzo ? ' per fornitura in '+dd.indirizzo : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 9, c. 1 All. A Del. ARERA 655/2015/R/IDR (RQSII): la voltura consiste nel cambio di intestazione del contratto di fornitura senza interruzione dell'erogazione. Il tempo di esecuzione è di 5 giorni lavorativi dalla richiesta completa di documentazione.
+  • Art. 10 RQSII: il subentro senza modifica della portata del misuratore deve essere eseguito in 5 giorni lavorativi; con modifica della portata in 10 giorni lavorativi.
+  • Art. 11 RQSII: il corrispettivo di voltura è stabilito dall'Ente d'Ambito (ARRICAL) e comprende un contributo fisso; il deposito cauzionale è regolato dall'art. 10 del Regolamento SII ARRICAL.
+  • Art. 10 Reg. SII ARRICAL: il deposito cauzionale è pari a 3 mensilità del consumo medio annuo stimato per la tipologia d'uso.
+  • Carta dei Servizi SORICAL, § 4.2.3.
 
-STANDARD GARANTITI:
-  • Voltura: 5 gg lav dalla richiesta completa (indennizzo € 30);
-  • Subentro senza mod. portata${dd.matricola ? ' (matr. '+dd.matricola+')' : ''}: 5 gg lav;
-  • Subentro con mod. portata: 10 gg lav.
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.matricola ? 'Contatore: matr. ' + dd.matricola + '.\n' : ''}${dd.cf ? 'Codice fiscale richiedente: ' + dd.cf + '.\n' : ''}
+DOCUMENTAZIONE NECESSARIA:
+  1. Documento di identità e codice fiscale del nuovo intestatario;
+  2. Atto di proprietà, contratto di locazione o altro titolo di legittima disponibilità dell'immobile;
+  3. Ultima bolletta intestata al precedente titolare (se disponibile);
+  4. Lettura del contatore alla data della richiesta.
 
-DOCUMENTI NECESSARI: documento identità, codice fiscale${dd.cf ? ' ('+dd.cf+')' : ''}, atto proprietà/locazione, documentazione tecnica punto di consegna.
-
-Contattare servizio commerciale 800.069.127 o sportello per stato pratica.
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Voltura: 5 gg lav — Indennizzo automatico: € 30 (€ 60 se 2×, € 90 se 3×).
+  • Subentro con modifica portata: 10 gg lav — Indennizzo automatico: € 30.
 ` + chiusura(d);
 }
 
@@ -881,14 +935,21 @@ function rispostaAttivazione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-Attivazione/riattivazione${dd.indirizzo ? ' fornitura '+dd.indirizzo : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 9-12 All. A Del. ARERA 655/2015/R/IDR (RQSII): l'attivazione della fornitura deve avvenire entro 5 giorni lavorativi dalla stipula del contratto; la riattivazione senza modifica della portata entro 5 gg lav; la riattivazione con modifica della portata entro 10 gg lav.
+  • Art. 12 RQSII: le richieste pervenute oltre le ore 18 sono trattate come ricevute il primo giorno lavorativo successivo.
+  • Art. 50 RQSII: l'indennizzo automatico (€ 30) è accreditato nella prima bolletta utile entro 180 giorni dalla mancata prestazione.
+  • Carta dei Servizi SORICAL, § 4.2.3.
 
-  • Attivazione nuova / riattivazione senza mod. portata: 5 gg lav (indennizzo € 30);
-  • Con modifica portata${dd.matricola ? ' (matr. '+dd.matricola+')' : ''}: 10 gg lav (indennizzo € 30).
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.matricola ? 'Contatore: matr. ' + dd.matricola + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Attivazione fornitura: 5 gg lav — Indennizzo automatico: € 30.
+  • Riattivazione senza mod. portata: 5 gg lav — Indennizzo automatico: € 30.
+  • Riattivazione con mod. portata: 10 gg lav — Indennizzo automatico: € 30.
+  • Indennizzo crescente: € 60 se tra 2× e 3× lo standard; € 90 se oltre 3×.
 
-Richieste oltre le 18 trattate come pervenute il giorno lav. successivo. Indennizzo accreditato entro 180 gg.
-
-Pratica in fase di completamento.
+Pratica in fase di completamento. L'Utente sarà contattato${dd.telefono ? ' al ' + dd.telefono : ''}${dd.email ? ' / ' + dd.email : ''} per comunicazione esito.
 ` + chiusura(d);
 }
 
@@ -897,12 +958,21 @@ function rispostaDisattivazione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-Disattivazione fornitura${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.matricola ? ' (contatore matr. '+dd.matricola+')' : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 13 All. A Del. ARERA 655/2015/R/IDR (RQSII): la disattivazione della fornitura su richiesta dell'Utente deve essere eseguita entro 7 giorni lavorativi dalla data di ricevimento della richiesta.
+  • Art. 13, c. 2 RQSII: la disattivazione comporta la chiusura del punto di consegna, la rimozione del misuratore e la risoluzione del contratto di fornitura.
+  • Art. 13, c. 3 RQSII: la fattura di chiusura deve essere emessa entro 45 giorni dalla data di disattivazione e deve contenere la restituzione del deposito cauzionale e gli eventuali conguagli.
+  • Carta dei Servizi SORICAL, § 4.2.4.
 
-  • Tempo disattivazione: 7 gg lav dalla richiesta (indennizzo € 30).
-  • Comporta interruzione erogazione, rimozione contatore e risoluzione contratto.
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.matricola ? 'Contatore: matr. ' + dd.matricola + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Tempo di disattivazione: 7 gg lav — Indennizzo automatico: € 30.
 
-Richiesta presa in carico.
+La fattura di chiusura comprenderà:
+  • Conguaglio consumi fino alla data di disattivazione;
+  • Restituzione del deposito cauzionale;
+  • Eventuali partite a credito dell'Utente.
 ` + chiusura(d);
 }
 
@@ -911,17 +981,25 @@ function rispostaAllaccio(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-Allaccio${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' (Comune di '+dd.comune+')' : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 6 All. A Del. ARERA 655/2015/R/IDR (RQSII): il preventivo per allaccio idrico senza necessità di sopralluogo deve essere fornito entro 10 giorni lavorativi dalla richiesta.
+  • Art. 7 RQSII: il preventivo con sopralluogo deve essere fornito entro 20 giorni lavorativi.
+  • Art. 8, c. 1 RQSII: l'esecuzione dell'allaccio idrico semplice (che non comporta lavori di estensione/adeguamento rete) deve avvenire entro 15 giorni lavorativi dall'accettazione del preventivo.
+  • Art. 8, c. 2 RQSII: l'allaccio fognario semplice entro 20 giorni lavorativi.
+  • Art. 8, c. 3 RQSII: per lavori complessi (estensione/potenziamento rete), il tempo massimo è 30 giorni lavorativi.
+  • Art. 6, c. 4 RQSII: il preventivo ha validità minima di 3 mesi ed include dettaglio delle voci di costo.
+  • Carta dei Servizi SORICAL, § 4.2.1-4.2.2.
 
-  • Preventivo senza sopralluogo: 10 gg lav (indennizzo € 30);
-  • Preventivo con sopralluogo: 20 gg lav (indennizzo € 30);
-  • Esecuzione allaccio idrico semplice: 15 gg lav (indennizzo € 30);
-  • Allaccio fognario semplice: 20 gg lav (indennizzo € 30);
-  • Allaccio complesso: ≤ 30 gg lav.
+STATO PRATICA:
+${dd.indirizzo ? 'Ubicazione: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Preventivo senza sopralluogo: 10 gg lav — Indennizzo: € 30.
+  • Preventivo con sopralluogo: 20 gg lav — Indennizzo: € 30.
+  • Allaccio idrico semplice: 15 gg lav — Indennizzo: € 30.
+  • Allaccio fognario semplice: 20 gg lav — Indennizzo: € 30.
+  • Lavori complessi: ≤ 30 gg lav — Indennizzo: € 30.
 
-Tempi al netto di autorizzazioni enti terzi e adempimenti a carico Utente.
-
-Verifica stato pratica in corso.
+I tempi si intendono al netto di autorizzazioni da parte di enti terzi e di adempimenti a carico dell'Utente. SORICAL comunicherà tempestivamente eventuali cause di sospensione dei termini.
 ` + chiusura(d);
 }
 
@@ -930,20 +1008,28 @@ function rispostaMisuratore(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — ISTRUTTORIA AVVIATA
 
-Verifica/sostituzione misuratore${dd.matricola ? ' matr. '+dd.matricola : ''}${dd.indirizzo ? ' presso '+dd.indirizzo : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 29 All. A Del. ARERA 655/2015/R/IDR (RQSII): l'Utente ha diritto alla verifica del misuratore${dd.matricola ? ' (matr. ' + dd.matricola + ')' : ''}. Il Gestore deve eseguire la verifica in loco entro 10 giorni lavorativi dalla richiesta.
+  • Art. 30 RQSII: la comunicazione dell'esito della verifica in loco deve avvenire entro 10 giorni lavorativi; in caso di verifica in laboratorio, entro 30 giorni lavorativi.
+  • Art. 31 RQSII: la sostituzione del misuratore malfunzionante deve avvenire entro 10 giorni lavorativi dall'accertamento del guasto.
+  • Art. 32 RQSII: in caso di misuratore irregolare, il Gestore procede alla rettifica dei consumi per l'intero periodo in cui il misuratore è risultato non conforme, sulla base della miglior stima disponibile.
+  • D.M. 93/2017 (MiSE): l'Utente ha diritto a presenziare alla verifica in laboratorio e può richiedere il contraddittorio tramite la Camera di Commercio territorialmente competente.
+  • Del. ARERA 547/2019/R/IDR: obblighi di sostituzione programmata dei misuratori obsoleti.
+  • Carta dei Servizi SORICAL, § 4.4.11-12.
 
-  • Verifica sul posto: 10 gg lav (indennizzo € 30);
-  • Esito in loco: 10 gg lav (indennizzo € 30);
-  • Esito laboratorio: 30 gg lav (indennizzo € 30);
-  • Sostituzione malfunzionante: 10 gg lav (indennizzo € 30).
-${dd.letture ? '\nLetture segnalate: '+dd.letture.join(', ')+' — saranno utilizzate come riferimento.' : ''}
-ESITO VERIFICA:
-  a) REGOLARE: fatture confermate, costo verifica addebitabile;
-  b) IRREGOLARE: sostituzione + rettifica consumi periodo anomalia.
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.letture ? 'Letture segnalate: ' + dd.letture.join(', ') + ' — saranno utilizzate come riferimento.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Verifica in loco: 10 gg lav — Indennizzo: € 30.
+  • Comunicazione esito in loco: 10 gg lav — Indennizzo: € 30.
+  • Comunicazione esito laboratorio: 30 gg lav — Indennizzo: € 30.
+  • Sostituzione misuratore malfunzionante: 10 gg lav — Indennizzo: € 30.
 
-Utente può presenziare verifica lab o richiedere contraddittorio Camera di Commercio (D.M. 93/2017).
+POSSIBILI ESITI:
+  a) REGOLARE (errore ≤ ±5%): fatturazione confermata; costo della verifica addebitabile all'Utente.
+  b) IRREGOLARE (errore > ±5%): sostituzione del misuratore a carico del Gestore + rettifica dei consumi per il periodo di anomalia con accredito/addebito in bolletta.
 
-SORICAL contatterà l'Utente${dd.telefono ? ' al '+dd.telefono : ''}${dd.email ? ' / '+dd.email : ''} per concordare intervento.
+SORICAL contatterà l'Utente${dd.telefono ? ' al ' + dd.telefono : ''}${dd.email ? ' / ' + dd.email : ''} per concordare data e ora dell'intervento.
 ` + chiusura(d);
 }
 
@@ -952,16 +1038,23 @@ function rispostaPressione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — SOPRALLUOGO PROGRAMMATO
 
-Verifica pressione${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 33 All. A Del. ARERA 655/2015/R/IDR (RQSII): l'Utente ha diritto alla verifica del livello di pressione al punto di consegna. Il Gestore deve eseguire la verifica entro 10 giorni lavorativi dalla richiesta.
+  • Art. 33, c. 2 RQSII: la comunicazione dell'esito deve avvenire entro 10 giorni lavorativi dalla verifica.
+  • Del. ARERA 917/2017/R/IDR (RQTI), art. 11: parametri minimi di pressione — portata minima 0,10 l/sec al punto di consegna; carico idraulico minimo 5 metri al piano più elevato dell'edificio; pressione massima 70 metri nelle ore notturne.
+  • Carta dei Servizi SORICAL, § 4.4.14.
 
-LIVELLI MINIMI: portata 0,10 l/sec; carico idraulico min 5m (piano più elevato); max 70m notturno.
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Verifica pressione sul posto: 10 gg lav — Indennizzo: € 30.
+  • Comunicazione esito: 10 gg lav — Indennizzo: € 30.
 
-  • Verifica: 10 gg lav (indennizzo € 30);
-  • Comunicazione esito: 10 gg lav (indennizzo € 30).
+POSSIBILI ESITI:
+  a) CONFORME: pressione entro i parametri normativi; costi di verifica addebitabili.
+  b) NON CONFORME: SORICAL avvierà gli interventi tecnici necessari al ripristino dei livelli di pressione garantiti (potenziamento rete, sostituzione condotta, installazione sistema di pompaggio).
 
-Se IRREGOLARE: interventi tecnici per ripristino. Se REGOLARE: costi verifica addebitabili.
-
-Sopralluogo sarà programmato con preavviso.
+Il sopralluogo sarà programmato con preavviso concordato con l'Utente${dd.telefono ? ' al ' + dd.telefono : ''}.
 ` + chiusura(d);
 }
 
@@ -970,17 +1063,26 @@ function rispostaMorosita(d) {
   return intestazione(d) + `
 ESITO: FONDATO — ISTRUTTORIA URGENTE AVVIATA
 
-Sospensione/limitazione fornitura${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
-${dd.importi ? 'Importi oggetto di morosità: '+dd.importi.join(', ')+'.\n' : ''}
-INDENNIZZI AUTOMATICI:
-  • € 10: sospensione anticipata, o in pendenza rateizzazione, o senza sollecito bonario;
-  • € 30: sospensione utente non disalimentabile, domestico residente, senza comunicazione mora, o nonostante pagamento comunicato.
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 44-47 All. A Del. ARERA 655/2015/R/IDR (RQSII) e REMSI ARERA (Regolazione della morosità nel SII):
+  • Art. 44 RQSII: prima della sospensione, il Gestore è tenuto ad inviare sollecito bonario (almeno 25 gg prima), poi comunicazione di costituzione in mora (almeno 40 gg prima della sospensione).
+  • Art. 45 RQSII: la sospensione è vietata nei giorni festivi, prefestivi e il sabato; è vietata per morosità relativa a servizi diversi dal SII.
+  • Art. 46 RQSII: utenze non disalimentabili (ospedali, scuole, carceri, ecc.) non possono essere sospese.
+  • Art. 7.4-7.5 REMSI: la sospensione non può avvenire se l'Utente ha un piano di rateizzazione in corso e regolare.
+  • Art. 47 RQSII: la riattivazione deve avvenire entro 2 giorni feriali dall'attestazione del pagamento.
+  • Carta dei Servizi SORICAL, § 4.4.7.
 
-RIATTIVAZIONE: 2 gg feriali dall'attestazione pagamento${dd.importi ? ' di '+dd.importi.join(', ') : ''} (indennizzo € 30).
+STATO PRATICA:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.importi ? 'Importi contestati: ' + dd.importi.join(', ') + '.\n' : ''}
+INDENNIZZI AUTOMATICI PREVISTI:
+  • € 10: sospensione anticipata rispetto ai termini, o in pendenza di rateizzazione regolare, o senza invio del sollecito bonario.
+  • € 30: sospensione di utenza non disalimentabile; sospensione di utente domestico residente; sospensione senza comunicazione di costituzione in mora; sospensione nonostante l'Utente abbia comunicato l'avvenuto pagamento.
 
-DIVIETI: No sospensione festivi, prefestivi, sabato, né per servizi diversi da SII.
+RIATTIVAZIONE:
+  • Termine: 2 giorni feriali dall'attestazione dell'avvenuto pagamento — Indennizzo: € 30 per ogni giorno di ritardo.
+  • L'Utente deve comunicare il pagamento via PEC a reclami.soricalspa.it@pec.it allegando ricevuta/contabile bancaria.
 
-Comunicare pagamento via PEC a reclami.soricalspa.it@pec.it con ricevuta allegata.
+La procedura di sospensione è immediatamente sospesa in pendenza del presente reclamo ai sensi dell'art. 7.5 REMSI.
 ` + chiusura(d);
 }
 
@@ -989,16 +1091,26 @@ function rispostaInterruzione(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN VERIFICA TECNICA
 
-Interruzione servizio${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
-${dd.date && dd.date.length ? 'Date segnalate: '+dd.date.join(', ')+'.\n' : ''}
-STANDARD (indennizzo € 30 ciascuno):
-  • Max sospensione programmata: 24 ore;
-  • Servizio sostitutivo emergenza: entro 48 ore;
-  • Preavviso interruzioni programmate: 48 ore.
+QUADRO NORMATIVO APPLICABILE:
+  • Del. ARERA 917/2017/R/IDR (RQTI — Regolazione della Qualità Tecnica), art. 8-10: standard minimi per la continuità del servizio idrico.
+  • Art. 8 RQTI: la durata massima della singola sospensione programmata è di 24 ore. Il Gestore è tenuto a garantire un servizio sostitutivo di emergenza entro 48 ore dall'interruzione.
+  • Art. 9 RQTI: il preavviso minimo per interruzioni programmate è di 48 ore, con comunicazione capillare all'utenza interessata.
+  • Art. 10 RQTI: il tempo di intervento in caso di emergenza/guasto è di 3 ore (180 min) nel 90% dei casi.
+  • Art. 24 RQSII (Del. 655/2015): tempo di risposta al servizio telefonico di pronto intervento: 120 secondi.
+  • Carta dei Servizi SORICAL, § 4.5.
 
-Pronto intervento: 180 min (90% chiamate). Risposta: < 120 sec.
+STATO SEGNALAZIONE:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}${dd.date && dd.date.length ? 'Date segnalate: ' + dd.date.join(', ') + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI:
+  • Durata max sospensione programmata: 24 ore — Indennizzo: € 30.
+  • Servizio sostitutivo di emergenza: entro 48 ore — Indennizzo: € 30.
+  • Preavviso interruzioni programmate: 48 ore — Indennizzo: € 30.
+  • Tempo di pronto intervento: 180 min (90% dei casi).
+  • Risposta telefonica pronto intervento: < 120 secondi.
 
 N. Verde Pronto Intervento H24: 800.069.129.
+
+SORICAL sta verificando le cause dell'interruzione e provvederà a comunicare tempestivamente l'esito delle verifiche tecniche e gli eventuali interventi programmati.
 ` + chiusura(d);
 }
 
@@ -1007,13 +1119,29 @@ function rispostaQualitaAcqua(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — ANALISI IN CORSO
 
-Segnalazione qualità acqua${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • D.Lgs. 31/2001 (attuazione Dir. 98/83/CE): requisiti di qualità delle acque destinate al consumo umano. Stabilisce i parametri microbiologici e chimici che l'acqua deve rispettare al punto di consegna.
+  • D.Lgs. 18/2023 (attuazione Dir. 2020/2184/UE): nuova disciplina delle acque destinate al consumo umano, con parametri aggiornati e approccio basato sulla valutazione del rischio (Water Safety Plan).
+  • Art. 14 D.Lgs. 31/2001: il Gestore è responsabile della qualità dell'acqua fino al punto di consegna (contatore). Oltre tale punto, la responsabilità è del proprietario dell'impianto interno.
+  • Del. ARERA 917/2017/R/IDR (RQTI), art. 15: obbligo di comunicazione tempestiva all'utenza in caso di non conformità dei parametri.
+  • Carta dei Servizi SORICAL, § 4.7.
 
-PARAMETRI GARANTITI: colore/odore/sapore accettabili, coliformi 0/100ml, pH 6.5-9.5, residuo secco ≤ 1500 mg/l.
+PARAMETRI DI QUALITÀ GARANTITI (All. I D.Lgs. 31/2001):
+  • Colore, odore, sapore: accettabili per i consumatori;
+  • Escherichia coli: 0/100 ml; Enterococchi: 0/100 ml;
+  • pH: 6,5 – 9,5; Residuo secco a 180°C: ≤ 1.500 mg/l;
+  • Torbidità: ≤ 1,0 NTU; Clororesiduo: ≤ 0,2 mg/l.
 
-SORICAL procederà ad analisi del punto di consegna. In caso di anomalie: provvedimenti tecnici + comunicazione scritta.
+STATO SEGNALAZIONE:
+${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}
+SORICAL procederà a:
+  1. Campionamento e analisi dell'acqua al punto di consegna;
+  2. Verifica della rete di distribuzione nel tratto interessato;
+  3. Comunicazione scritta dell'esito delle analisi all'Utente.
 
-In emergenza: servizio sostitutivo entro 48h. Pronto Intervento H24: 800.069.129.
+In caso di non conformità: adozione di provvedimenti tecnici urgenti (disinfezione, lavaggio rete, sospensione temporanea) e attivazione servizio sostitutivo entro 48 ore.
+
+N. Verde Pronto Intervento H24: 800.069.129.
 ` + chiusura(d);
 }
 
@@ -1022,15 +1150,21 @@ function rispostaAppuntamento(d) {
   return intestazione(d) + `
 ESITO: FONDATO — INDENNIZZO DOVUTO
 
-Mancato rispetto appuntamento${dd.date && dd.date.length ? ' del '+dd.date[0] : ''}${dd.indirizzo ? ' in '+dd.indirizzo : ''}:
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 20 All. A Del. ARERA 655/2015/R/IDR (RQSII): per le prestazioni che richiedono un sopralluogo, il Gestore è tenuto a fissare un appuntamento con l'Utente entro 7 giorni lavorativi dalla richiesta.
+  • Art. 21 RQSII: la fascia di puntualità per gli appuntamenti è di massimo 3 ore. Il Gestore deve comunicare ora di inizio e ora di fine della fascia.
+  • Art. 22 RQSII: in caso di necessità di disdetta, il Gestore deve avvisare l'Utente con almeno 24 ore di anticipo e fissare un nuovo appuntamento.
+  • Art. 50, c. 1 RQSII: in caso di mancato rispetto della fascia di puntualità, è dovuto un indennizzo automatico di € 30 senza necessità di richiesta da parte dell'Utente.
+  • Carta dei Servizi SORICAL, § 4.3.5.
 
-  • Fascia puntualità: 3 ore (indennizzo € 30);
-  • Fissazione appuntamento: 7 gg lav;
-  • Preavviso disdetta: 24 ore.
+MANCATO RISPETTO APPUNTAMENTO:
+${dd.date && dd.date.length ? 'Data appuntamento non rispettato: ' + dd.date[0] + '.\n' : ''}${dd.indirizzo ? 'Ubicazione: ' + dd.indirizzo + '.\n' : ''}
+INDENNIZZO AUTOMATICO:
+  • € 30 accreditato nella prima bolletta utile entro 180 giorni.
+  • € 60 se il ritardo supera il doppio dello standard.
+  • € 90 se il ritardo supera il triplo dello standard.
 
-Indennizzo € 30 accreditato in prima bolletta utile entro 180 gg.
-
-Nuovo appuntamento sarà fissato contattando direttamente l'Utente.
+SORICAL provvederà a fissare un nuovo appuntamento contattando direttamente l'Utente${dd.telefono ? ' al ' + dd.telefono : ''} nel rispetto degli standard previsti.
 ` + chiusura(d);
 }
 
@@ -1039,17 +1173,23 @@ function rispostaInformazione(d) {
   return intestazione(d) + `
 ESITO: RISPOSTA A RICHIESTA INFORMAZIONI
 
-Risposta motivata entro 30 gg lav (indennizzo € 30 se non rispettato).
-${dd.indirizzo ? '\nFornitura di riferimento: '+dd.indirizzo+'.' : ''}
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 23 All. A Del. ARERA 655/2015/R/IDR (RQSII): il Gestore è tenuto a fornire risposta motivata alle richieste scritte di informazioni entro 30 giorni lavorativi dalla data di ricevimento. In caso di mancato rispetto: indennizzo automatico € 30.
+  • Art. 24-25 RQSII: standard di accessibilità — sportelli fisici, servizio telefonico (tempo medio attesa < 240 sec), sito web con informazioni su tariffe, contratti, modulistica, qualità dell'acqua.
+  • Carta dei Servizi SORICAL, § 4.3.10.
+${dd.indirizzo ? '\nFornitura di riferimento: ' + dd.indirizzo + '.' : ''}
 
-CONTATTI SORICAL:
-  • Sito: www.soricalspa.com
-  • N. Verde Commerciale: 800.069.127 / 0961.76.76.21
-  • N. Verde Pronto Intervento: 800.069.129
+CANALI DI CONTATTO SORICAL:
+  • Sito web: www.soricalspa.com (tariffe, modulistica, Carta dei Servizi, regolamento)
+  • N. Verde Commerciale: 800.069.127 (da rete fissa) / 0961.76.76.21 (da mobile)
+  • N. Verde Pronto Intervento H24: 800.069.129
   • PEC: reclami.soricalspa.it@pec.it
-  • Portale MySorical: autolettura e gestione utenza online
+  • Portale MySorical: autolettura, consultazione bollette, gestione utenza online
+  • Sportelli territoriali: orari e ubicazioni su www.soricalspa.com/sportelli
 
 [INSERIRE QUI RISPOSTA SPECIFICA ALLA RICHIESTA DELL'UTENTE]
+
+Tempo di risposta garantito: 30 giorni lavorativi — Indennizzo automatico: € 30.
 ` + chiusura(d);
 }
 
@@ -1058,16 +1198,23 @@ function rispostaLavori(d) {
   return intestazione(d) + `
 ESITO: AMMESSO — IN FASE DI VERIFICA
 
-Ritardo lavori${dd.indirizzo ? ' in '+dd.indirizzo : ''}${dd.comune ? ' ('+dd.comune+')' : ''}:
-${dd.date && dd.date.length ? 'Date di riferimento: '+dd.date.join(', ')+'.\n' : ''}
-  • Preventivo senza sopralluogo: 10 gg lav (indennizzo € 30);
-  • Preventivo con sopralluogo: 20 gg lav (indennizzo € 30);
-  • Lavori semplici: 10 gg lav dall'accettazione (indennizzo € 30);
-  • Lavori complessi: ≤ 30 gg lav.
+QUADRO NORMATIVO APPLICABILE:
+  • Art. 35 All. A Del. ARERA 655/2015/R/IDR (RQSII): il preventivo per lavori senza necessità di sopralluogo deve essere comunicato entro 10 giorni lavorativi dalla richiesta.
+  • Art. 36 RQSII: il preventivo con sopralluogo deve essere comunicato entro 20 giorni lavorativi.
+  • Art. 37 RQSII: l'esecuzione di lavori semplici (senza estensione/adeguamento rete) deve avvenire entro 10 giorni lavorativi dall'accettazione del preventivo da parte dell'Utente.
+  • Art. 37, c. 2 RQSII: per lavori complessi (che comportano estensione o potenziamento della rete), il tempo massimo è di 30 giorni lavorativi dall'accettazione del preventivo.
+  • Art. 35, c. 3 RQSII: i tempi sono al netto delle autorizzazioni da parte di enti terzi e degli adempimenti a carico dell'Utente. Il Gestore deve comunicare tempestivamente le cause di sospensione.
+  • Carta dei Servizi SORICAL, § 4.4.15-16.
 
-Tempi al netto di autorizzazioni enti terzi e adempimenti Utente.
+STATO PRATICA:
+${dd.indirizzo ? 'Ubicazione lavori: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}${dd.date && dd.date.length ? 'Date di riferimento: ' + dd.date.join(', ') + '.\n' : ''}
+STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
+  • Preventivo senza sopralluogo: 10 gg lav — Indennizzo: € 30.
+  • Preventivo con sopralluogo: 20 gg lav — Indennizzo: € 30.
+  • Esecuzione lavori semplici: 10 gg lav — Indennizzo: € 30.
+  • Esecuzione lavori complessi: ≤ 30 gg lav — Indennizzo: € 30.
 
-Verifica stato avanzamento in corso.
+Verifica stato avanzamento pratica in corso. SORICAL comunicherà tempestivamente eventuali cause di sospensione dei termini.
 ` + chiusura(d);
 }
 
@@ -1076,12 +1223,19 @@ function rispostaGenerico(d) {
   return intestazione(d) + `
 ESITO: PRESO IN CARICO — IN ISTRUTTORIA
 
+QUADRO NORMATIVO APPLICABILE:
+  • Del. ARERA 655/2015/R/IDR (RQSII — Regolazione della Qualità contrattuale del Servizio Idrico Integrato): disciplina gli standard minimi di qualità contrattuale che il Gestore è tenuto a rispettare.
+  • Art. 48-49 RQSII: il Gestore è tenuto a fornire risposta motivata al reclamo scritto entro 30 giorni lavorativi dalla data di ricevimento. La risposta deve contenere: valutazione documentata del Gestore, descrizione e tempi delle azioni correttive, indicazione dei termini e delle modalità di tutela (conciliazione ARERA, ARRICAL).
+  • Art. 50 RQSII: in caso di mancato rispetto dello standard, è dovuto un indennizzo automatico di € 30 (€ 60 se tra 2× e 3× lo standard; € 90 se oltre 3×), accreditato nella prima bolletta utile entro 180 giorni.
+  • Carta dei Servizi SORICAL — approvata ai sensi della normativa ARERA.
+
 SORICAL ha avviato istruttoria per verificare i fatti esposti e fornire risposta motivata.
-${dd.fatture ? '\nFatture citate: '+dd.fatture.join(', ')+'.' : ''}${dd.importi ? '\nImporti indicati: '+dd.importi.join(', ')+'.' : ''}${dd.indirizzo ? '\nFornitura: '+dd.indirizzo+'.' : ''}${dd.matricola ? '\nContatore: matr. '+dd.matricola+'.' : ''}
+${dd.fatture ? '\nFatture citate: ' + dd.fatture.join(', ') + '.' : ''}${dd.importi ? '\nImporti indicati: ' + dd.importi.join(', ') + '.' : ''}${dd.indirizzo ? '\nFornitura: ' + dd.indirizzo + '.' : ''}${dd.matricola ? '\nContatore: matr. ' + dd.matricola + '.' : ''}
 
-Termine risposta: 30 gg lavorativi (indennizzo € 30 se non rispettato).
-
-Indennizzo automatico accreditato in prima bolletta utile entro 180 gg con causale "Indennizzo automatico per mancato rispetto dei livelli specifici di qualità contrattuale".
+STANDARD DI QUALITÀ GARANTITI:
+  • Risposta motivata al reclamo: 30 giorni lavorativi — Indennizzo automatico: € 30.
+  • Indennizzo crescente per ritardo: € 60 (2-3× standard), € 90 (oltre 3×).
+  • Accredito indennizzo: prima bolletta utile entro 180 giorni, con causale "Indennizzo automatico per mancato rispetto dei livelli specifici di qualità contrattuale".
 ` + chiusura(d);
 }
 
