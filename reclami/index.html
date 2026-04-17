@@ -659,11 +659,29 @@ function elaboraReclamo() {
     norme: info.norme, standard: info.standard, label: info.label, dati
   });
 
-  // Inserisce la lettura in TUTTE le categorie se presente e non già inclusa
-  if (lettura) {
-    const rigaL = `LETTURA CONTATORE COMUNICATA DALL'UTENTE: ${lettura} m³`;
-    if (!risposta.includes(rigaL)) {
-      risposta = risposta.replace(/(\nESITO[^\n]*\n)/, `$1${rigaL}\n`);
+  // Inserisce sezione DATI CONTATORE nella risposta se presente lettura o matricola
+  const matricolaVal = dati.matricola || document.getElementById('contratto').value.trim();
+  if (lettura || matricolaVal) {
+    const oggi2 = new Date();
+    const dataRilevazione = oggi2.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'});
+    let sezione = '\nVERIFICA CONTATORE:';
+    if (matricolaVal) sezione += `\n  Matricola/Contratto: ${matricolaVal}`;
+    if (lettura) sezione += `\n  Lettura rilevata da foto: ${lettura} m³`;
+    sezione += `\n  Data rilevazione: ${dataRilevazione}`;
+    if (lettura && dati.consumoMc) {
+      sezione += `\n  Consumo dichiarato nel reclamo: ${dati.consumoMc} mc`;
+      // Confronto lettura vs consumo dichiarato
+      const lettNum = parseFloat(lettura.replace(',', '.'));
+      const consNum = parseFloat(dati.consumoMc.replace(',', '.'));
+      if (!isNaN(lettNum) && !isNaN(consNum)) {
+        const diff = Math.abs(lettNum - consNum);
+        if (diff > 1) sezione += `\n  ⚠ Scostamento lettura/consumo dichiarato: ${diff.toFixed(1)} mc — richiede verifica`;
+      }
+    }
+    sezione += '\n';
+    // Inserisci dopo la riga ESITO
+    if (!risposta.includes('VERIFICA CONTATORE:')) {
+      risposta = risposta.replace(/(\nESITO[^\n]*\n)/, '$1' + sezione);
     }
   }
 
@@ -695,6 +713,7 @@ function intestazione(d) {
   if (d.dati.email) sintesiRighe.push(`Email: ${d.dati.email}`);
   if (d.dati.telefono) sintesiRighe.push(`Tel: ${d.dati.telefono}`);
   if (d.dati.cf) sintesiRighe.push(`CF: ${d.dati.cf}`);
+  if (d.lettura) sintesiRighe.push(`Lettura contatore (da foto): ${d.lettura} m³`);
 
   return `SORICAL S.p.A. — Servizio Idrico Integrato della Regione Calabria
 Sede Legale: Viale Europa 35 – Loc. Germaneto – 88100 Catanzaro (CZ)
