@@ -652,9 +652,11 @@ function elaboraReclamo() {
 
   const lettura = document.getElementById('lettura-contatore').value.trim();
 
-  let risposta = info.risposta({
+  const dati = estraiDati(testo);
+
+  let risposta = info.fn({
     testo, nome, dataReclamo: dataReclamoStr, dataOggi, prot, contratto, lettura,
-    norme: info.norme, standard: info.standard, label: info.label
+    norme: info.norme, standard: info.standard, label: info.label, dati
   });
 
   // Inserisce la lettura in TUTTE le categorie se presente e non già inclusa
@@ -1568,6 +1570,8 @@ function parseEML(rawText) {
   const hdrs = parseHeaders(hdrBlock);
   result.subject = decodeRFC2047(hdrs['subject'] || '');
   result.from = decodeRFC2047(hdrs['from'] || '');
+  result.to = decodeRFC2047(hdrs['to'] || '');
+  result.cc = decodeRFC2047(hdrs['cc'] || '');
   result.date = hdrs['date'] || '';
 
   const ct = hdrs['content-type'] || '';
@@ -1599,6 +1603,44 @@ function handleEML(file) {
     const nAllegati = parsed.attachments.length;
     const nImg = parsed.attachments.filter(a => a.mimeType.startsWith('image/')).length;
 
+    // Feedback visivo: upload zone EML → stato caricato
+    const emlZone = document.getElementById('eml-upload-zone');
+    emlZone.classList.add('has-file');
+    emlZone.querySelector('.uz-icon').textContent = '✔';
+    emlZone.querySelector('.uz-label').textContent = file.name || 'Email caricata';
+    emlZone.querySelector('.uz-sub').textContent = `Oggetto: ${parsed.subject || '(nessuno)'} — Da: ${parsed.from || '(sconosciuto)'}`;
+
+    // Mostra info parsing nel box
+    const fiInfo = document.getElementById('file-info');
+    if (fiInfo) {
+      document.getElementById('fi-name').textContent = file.name || '—';
+      document.getElementById('fi-from').textContent = parsed.from || '—';
+      document.getElementById('fi-subject').textContent = parsed.subject || '—';
+      document.getElementById('fi-date').textContent = parsed.date || '—';
+      document.getElementById('fi-attach').textContent = nAllegati > 0 ? `${nAllegati} (${nImg} immagini)` : 'Nessuno';
+      fiInfo.classList.add('show');
+    }
+
+    // Step indicator → Step 2
+    setStep(2);
+
+    // Auto-compila campi form dall'email
+    if (parsed.from) {
+      // Estrai nome dal From: "Nome Cognome <email>" o solo email
+      const fromName = parsed.from.replace(/<[^>]+>/, '').replace(/"/g, '').trim();
+      if (fromName) document.getElementById('nome-utente').value = fromName;
+    }
+    if (parsed.date) {
+      // Prova a parsare la data dell'email per il campo date
+      try {
+        const d = new Date(parsed.date);
+        if (!isNaN(d)) {
+          const iso = d.toISOString().split('T')[0]; // yyyy-mm-dd
+          document.getElementById('data-reclamo').value = iso;
+        }
+      } catch(e) {}
+    }
+
     // Corpo email → textarea reclamo
     if (parsed.body) {
       const pulito = parsed.body.replace(/\n{3,}/g, '\n\n').trim();
@@ -1613,6 +1655,19 @@ function handleEML(file) {
       // Se non c'è body ma ci sono allegati, segnala
       document.getElementById('testo-reclamo').value =
         `[Email: ${parsed.subject || '(senza oggetto)'}]\n[Da: ${parsed.from}]\n\n(Testo email vuoto — verificare allegati)`;
+    }
+
+    // Auto-compila dati estratti dal testo (contratto, email, telefono, ecc.)
+    const testoCorrente = document.getElementById('testo-reclamo').value;
+    const datiEstratti = estraiDati(testoCorrente);
+    if (datiEstratti.email) {
+      // Se il campo nome è vuoto, usa l'email come fallback
+      if (!document.getElementById('nome-utente').value.trim()) {
+        document.getElementById('nome-utente').value = datiEstratti.email;
+      }
+    }
+    if (datiEstratti.codiceCliente && !document.getElementById('contratto').value.trim()) {
+      document.getElementById('contratto').value = datiEstratti.codiceCliente;
     }
 
     // Allegati
