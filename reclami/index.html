@@ -54,26 +54,6 @@ header .back:hover { opacity: 1; }
 }
 .card-body { padding: 16px 18px; }
 
-/* ── UPLOAD ZONE ── */
-.upload-zone {
-  border: 2.5px dashed var(--acqua); border-radius: 12px; padding: 40px 20px;
-  text-align: center; cursor: pointer; transition: all .2s; background: #f4faff;
-}
-.upload-zone:hover, .upload-zone.drag { background: #e0f0ff; border-color: var(--blu); }
-.upload-zone input { display: none; }
-.upload-zone .icon { font-size: 2.5rem; margin-bottom: 8px; }
-.upload-zone .label { font-size: 1rem; font-weight: 600; color: var(--blu); }
-.upload-zone .sub { font-size: .82rem; color: var(--txt2); margin-top: 4px; }
-.upload-zone.has-file { border-style: solid; border-color: var(--verde); background: #f0fdf4; }
-.upload-zone.has-file .icon::before { content: '✔'; }
-
-/* ── PROGRESS ── */
-.progress-wrap { display: none; margin-top: 14px; }
-.progress-wrap.show { display: block; }
-.progress-label { font-size: .82rem; color: var(--txt2); display: flex; justify-content: space-between; margin-bottom: 4px; }
-.progress-bar { width: 100%; height: 6px; background: #e0e8f0; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--blu); border-radius: 3px; width: 0%; transition: width .2s; }
-
 /* ── FILE INFO ── */
 .file-info {
   display: none; margin-top: 14px; padding: 12px 16px; background: #f0fdf4;
@@ -142,10 +122,6 @@ textarea:focus { outline: none; border-color: var(--blu); }
 }
 #copy-msg { font-size: .82rem; color: var(--verde); display: none; }
 
-/* ── THUMB ── */
-.thumb-wrap { display: none; text-align: center; margin-top: 10px; }
-.thumb-wrap img { max-height: 120px; border-radius: 6px; border: 1px solid var(--bordo); }
-
   .tip { font-size: .78rem; color: #888; margin-top: 4px; }
 
   .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -202,6 +178,11 @@ textarea:focus { outline: none; border-color: var(--blu); }
   .btn-ocr-allegato { font-size:.74rem; background:#003580; color:white; border:none; border-radius:4px; padding:5px 8px; cursor:pointer; width:100%; }
   .btn-ocr-allegato:hover { background:#0050b3; }
   .btn-ocr-allegato.attivo { background:#276749; }
+
+  footer {
+    text-align: center; font-size: .78rem; color: var(--txt2); padding: 20px 16px;
+    border-top: 1px solid var(--bordo); margin-top: 20px;
+  }
 </style>
 </head>
 <body>
@@ -231,23 +212,8 @@ textarea:focus { outline: none; border-color: var(--blu); }
 
       <!-- UPLOAD -->
       <div class="card">
-        <h2>1. Incolla testo del reclamo ricevuto</h2>
-        <div class="meta-row">
-          <label>Data reclamo ricevuto
-            <input type="date" id="data-reclamo">
-          </label>
-          <label>N° protocollo (opzionale)
-            <input type="text" id="protocollo" placeholder="es. 2025/1234">
-          </label>
-        </div>
-        <div class="meta-row">
-          <label>Nome utente / Intestatario
-            <input type="text" id="nome-utente" placeholder="Cognome Nome">
-          </label>
-          <label>N° contratto / Pod (opzionale)
-            <input type="text" id="contratto" placeholder="es. CZ-00001234">
-          </label>
-        </div>
+        <div class="card-head">1. Carica file reclamo</div>
+        <div class="card-body">
         <!-- MODALITÀ CONTATORE -->
         <div class="modo-contatore-row">
           <label>
@@ -305,26 +271,17 @@ textarea:focus { outline: none; border-color: var(--blu); }
             <span id="ocr-status">Lettura in corso…</span>
             <span id="ocr-pct">0%</span>
           </div>
+          <div class="ocr-bar"><div class="ocr-bar-fill" id="ocr-bar-fill"></div></div>
+        </div>
 
-          <div class="progress-wrap" id="progress-wrap">
-            <div class="progress-label">
-              <span id="prog-status">Elaborazione…</span>
-              <span id="prog-pct">0%</span>
-            </div>
-            <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-          </div>
-
-          <div class="file-info" id="file-info">
-            <div class="fi-row"><span class="fi-label">File:</span><span id="fi-name">—</span></div>
-            <div class="fi-row"><span class="fi-label">Mittente:</span><span id="fi-from">—</span></div>
-            <div class="fi-row"><span class="fi-label">Oggetto:</span><span id="fi-subject">—</span></div>
-            <div class="fi-row"><span class="fi-label">Data:</span><span id="fi-date">—</span></div>
-            <div class="fi-row"><span class="fi-label">Allegati:</span><span id="fi-attach">—</span></div>
-          </div>
-
-          <div class="thumb-wrap" id="thumb-wrap">
-            <img id="thumb-img" src="" alt="anteprima">
-          </div>
+        <!-- INFO FILE EML -->
+        <div class="file-info" id="file-info">
+          <div class="fi-row"><span class="fi-label">File:</span><span id="fi-name">—</span></div>
+          <div class="fi-row"><span class="fi-label">Mittente:</span><span id="fi-from">—</span></div>
+          <div class="fi-row"><span class="fi-label">Oggetto:</span><span id="fi-subject">—</span></div>
+          <div class="fi-row"><span class="fi-label">Data:</span><span id="fi-date">—</span></div>
+          <div class="fi-row"><span class="fi-label">Allegati:</span><span id="fi-attach">—</span></div>
+        </div>
         </div>
       </div>
 
@@ -1268,8 +1225,14 @@ function pulisciTutto() {
   document.getElementById('file-info').classList.remove('show');
   document.getElementById('thumb-wrap').style.display = 'none';
   document.getElementById('upload-zone').classList.remove('has-file');
-  document.getElementById('upload-icon').textContent = '📧';
-  document.getElementById('upload-label').textContent = 'Trascina qui il file o clicca per selezionare';
+  const emlZone = document.getElementById('eml-upload-zone');
+  emlZone.classList.remove('has-file');
+  emlZone.querySelector('.uz-icon').textContent = '📧';
+  emlZone.querySelector('.uz-label').textContent = 'Carica file email (.eml) con allegati';
+  emlZone.querySelector('.uz-sub').textContent = 'Estrae testo del reclamo e immagini allegate (es. foto contatori)';
+  document.getElementById('eml-allegati').style.display = 'none';
+  document.getElementById('eml-allegati-list').innerHTML = '';
+  document.getElementById('ocr-bar-wrap').classList.remove('show');
   setStep(1);
 }
 
