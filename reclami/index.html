@@ -650,66 +650,25 @@ function elaboraReclamo() {
 // ═══════════════════════════════════════════════════════════════
 function intestazione(d) {
   let meta = [];
-  if (d.prot) meta.push(`Vs. Rif./Prot.: ${d.prot}`);
-  if (d.contratto) meta.push(`N° Contratto/Cliente: ${d.contratto}`);
-  if (d.dati.matricola) meta.push(`Matricola contatore: ${d.dati.matricola}`);
+  if (d.prot) meta.push(`Prot.: ${d.prot}`);
+  if (d.contratto) meta.push(`Contratto: ${d.contratto}`);
+  if (d.dati.matricola) meta.push(`Matricola: ${d.dati.matricola}`);
   if (d.dati.indirizzo) meta.push(`Fornitura: ${d.dati.indirizzo}`);
+  if (d.dati.codiceCliente) meta.push(`Cod. Cliente: ${d.dati.codiceCliente}`);
+  if (d.dati.cf) meta.push(`CF: ${d.dati.cf}`);
 
-  // Sintesi reclamo
-  const frasi = d.testo.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
-  const riassunto = frasi.length > 400 ? frasi.substring(0, 397) + '…' : frasi;
-
-  let sintesiRighe = [];
-  sintesiRighe.push(`"${riassunto}"`);
-  if (d.dati.fatture) sintesiRighe.push(`Fatture citate: ${d.dati.fatture.join(', ')}`);
-  if (d.dati.importi) sintesiRighe.push(`Importi: ${d.dati.importi.join(', ')}`);
-  if (d.dati.consumoMc) sintesiRighe.push(`Consumo: ${d.dati.consumoMc} mc`);
-  if (d.dati.periodo) sintesiRighe.push(`Periodo: ${d.dati.periodo}`);
-  if (d.dati.letture) sintesiRighe.push(`Letture: ${d.dati.letture.join(', ')}`);
-  if (d.dati.date && d.dati.date.length) sintesiRighe.push(`Date: ${d.dati.date.join(', ')}`);
-  if (d.dati.email) sintesiRighe.push(`Email: ${d.dati.email}`);
-  if (d.dati.telefono) sintesiRighe.push(`Tel: ${d.dati.telefono}`);
-  if (d.dati.cf) sintesiRighe.push(`CF: ${d.dati.cf}`);
-  if (d.lettura) sintesiRighe.push(`Lettura contatore (da foto): ${d.lettura} m³`);
-
-  return `SORICAL S.p.A. — Servizio Idrico Integrato della Regione Calabria
-Sede Legale: Viale Europa 35 – Loc. Germaneto – 88100 Catanzaro (CZ)
-PEC: reclami.soricalspa.it@pec.it | Sito: www.soricalspa.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Data: ${d.dataOggi}
-${meta.length ? meta.join('  |  ') + '\n' : ''}
-A: ${d.nome}
-
-OGGETTO: Riscontro al reclamo del ${d.dataReclamo} — ${d.label}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-SINTESI DEL RECLAMO RICEVUTO:
-${sintesiRighe.map(r => '  ' + r).join('\n')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+  return `OGGETTO: Riscontro al reclamo del ${d.dataReclamo} — ${d.label}
+${meta.length ? meta.join(' | ') + '\n' : ''}
 ${d.nome},
 
-in riferimento al Suo reclamo ricevuto in data ${d.dataReclamo}${d.prot ? ` (prot. n. ${d.prot})` : ''}, relativo a "${d.label}", SORICAL S.p.A., nella propria qualità di Gestore del Servizio Idrico Integrato della Regione Calabria, così risponde ai sensi della Carta dei Servizi e della normativa ARERA.
+in riferimento al Suo reclamo del ${d.dataReclamo}${d.prot ? ` (prot. ${d.prot})` : ''}, Le comunichiamo quanto segue.
 `;
 }
 
 function chiusura(d) {
   return `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RIFERIMENTI NORMATIVI:
-${d.norme.map(n => '  • ' + n).join('\n')}
-
-TUTELE DELL'UTENTE — In caso di mancata o insoddisfacente risposta:
-  a) Conciliazione ARERA: tel. 800.166.654 – www.sportelloperilconsumatore.it
-  b) Conciliazione Paritetica tramite Associazioni Consumatori
-  c) ARRICAL – Autorità Rifiuti e Risorse Idriche della Calabria
-
 Cordiali saluti,
-
-SORICAL S.p.A.
-Ufficio Reclami e Tutela Utente
-Tel. Verde: 800.069.127 | Da mobile: 0961.76.76.21
-PEC: reclami.soricalspa.it@pec.it
+SORICAL S.p.A. — Ufficio Reclami
 `;
 }
 
