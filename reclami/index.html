@@ -338,7 +338,6 @@ textarea:focus { outline: none; border-color: var(--blu); }
             <div class="norma-box" id="norma-box"></div>
           </div>
 
-          <button class="btn btn-primary" id="btn-genera" onclick="elaboraReclamo()">⚡ Genera risposta al reclamo</button>
         </div>
       </div>
     </div>
@@ -346,9 +345,9 @@ textarea:focus { outline: none; border-color: var(--blu); }
     <!-- ═══ COLONNA DX ═══ -->
     <div>
       <div class="card" style="position:sticky;top:16px">
-        <div class="card-head">3. Risposta generata — pronta per invio</div>
+        <div class="card-head">Risposta generata</div>
         <div class="card-body">
-          <textarea id="output-area" placeholder="Carica un file reclamo e clicca 'Genera risposta'…"></textarea>
+          <textarea id="output-area" placeholder="Carica un file o incolla il testo — la risposta viene generata automaticamente…"></textarea>
           <div class="btn-row">
             <button class="btn btn-copy" onclick="copiaRisposta()">📋 Copia risposta</button>
             <button class="btn btn-clear" onclick="pulisciTutto()">🗑 Pulisci tutto</button>
@@ -541,17 +540,26 @@ function estraiDati(testo) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AUTO-DETECT CATEGORIA LIVE
+// AUTO-GENERA: rileva categoria + genera risposta automaticamente
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('testo-reclamo').addEventListener('input', function() {
-  const t = this.value.trim();
-  if (t.length < 20) { document.getElementById('cat-detected').innerHTML = ''; return; }
-  if (document.getElementById('cat-select').value !== 'auto') return;
-  const cat = rilevaCategoria(t);
-  const info = CATEGORIE[cat];
-  document.getElementById('cat-detected').innerHTML = `<span class="cat-badge auto">${info.label}</span>`;
-  showNorma(cat);
-});
+let _autoTimer = null;
+function autoGenera() {
+  clearTimeout(_autoTimer);
+  _autoTimer = setTimeout(() => {
+    const t = document.getElementById('testo-reclamo').value.trim();
+    if (t.length < 20) { document.getElementById('cat-detected').innerHTML = ''; return; }
+    const catSel = document.getElementById('cat-select').value;
+    const cat = (catSel === 'auto') ? rilevaCategoria(t) : catSel;
+    const info = CATEGORIE[cat];
+    document.getElementById('cat-detected').innerHTML =
+      `<span class="cat-badge ${catSel === 'auto' ? 'auto' : 'manual'}">${info.label}</span>`;
+    showNorma(cat);
+    elaboraReclamo();
+    setStep(3);
+  }, 300);
+}
+
+document.getElementById('testo-reclamo').addEventListener('input', autoGenera);
 
 document.getElementById('cat-select').addEventListener('change', function() {
   if (this.value !== 'auto') {
@@ -560,8 +568,13 @@ document.getElementById('cat-select').addEventListener('change', function() {
       `<span class="cat-badge manual">${CATEGORIE[this.value].label}</span>`;
   } else {
     document.getElementById('norma-box').classList.remove('show');
-    document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
   }
+  autoGenera();
+});
+
+// Rigenera anche quando si modificano i campi dati
+['nome-utente','protocollo','contratto','lettura-contatore'].forEach(id => {
+  document.getElementById(id).addEventListener('input', autoGenera);
 });
 
 function showNorma(cat) {
@@ -590,7 +603,7 @@ function setStep(n) {
 // ═══════════════════════════════════════════════════════════════
 function elaboraReclamo() {
   const testo = document.getElementById('testo-reclamo').value.trim();
-  if (!testo) { alert('Carica prima un file o incolla il testo del reclamo.'); return; }
+  if (!testo) return;
 
   const catSel = document.getElementById('cat-select').value;
   const cat = (catSel === 'auto') ? rilevaCategoria(testo) : catSel;
