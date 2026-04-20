@@ -741,11 +741,6 @@ SORICAL ha preso in carico la segnalazione relativa alla fatturazione${dd.fattur
   4. Verifica di eventuali partite pregresse e relativa esigibilità ai sensi della prescrizione biennale.
 ${dd.importi ? '\nImporti contestati dall\'Utente: ' + dd.importi.join(', ') + '.' : ''}${dd.consumoMc ? '\nConsumo dichiarato dall\'Utente: ' + dd.consumoMc + ' mc — sarà confrontato con lo storico delle letture effettive.' : ''}${dd.periodo ? '\nPeriodo contestato: ' + dd.periodo + '.' : ''}
 
-STANDARD DI QUALITÀ GARANTITI (Tab. 2-3 All. A RQSII):
-  • Tempo massimo di risposta motivata al reclamo: 30 giorni lavorativi — Indennizzo automatico: € 30.
-  • Tempo massimo di rettifica di fatturazione: 60 giorni lavorativi — Indennizzo automatico: € 30.
-  • Accredito somme non dovute: nella prima bolletta utile o tramite rimessa diretta.
-  • Indennizzo crescente: € 60 se tra 2× e 3× lo standard; € 90 se oltre 3× lo standard.
 
 In caso di accertata erroneità della fatturazione, SORICAL provvederà alla rettifica e all'accredito delle somme non dovute, comprensivo degli interessi legali, nella prima bolletta utile.
 ` + chiusura(d);
@@ -772,11 +767,6 @@ ${dd.fatture ? 'Fatture contestate: ' + dd.fatture.join(', ') + '.\n' : ''}${dd.
   4. Accertamento eventuale consumo anomalo e relativo obbligo di comunicazione preventiva;
   5. Verifica esigibilità consumi ai sensi della prescrizione biennale.
 
-STANDARD DI QUALITÀ GARANTITI:
-  • Risposta motivata al reclamo: 30 gg lav — Indennizzo: € 30.
-  • Rettifica fatturazione: 60 gg lav — Indennizzo: € 30.
-  • Mancata raccolta misura: Indennizzo € 30 per ogni tentativo mancante (art. 28 RQSII).
-  • Mancata comunicazione consumo anomalo: rettifica d'ufficio su tariffa agevolata.
 
 In caso di accertata incongruenza tra consumi stimati e consumi effettivi, SORICAL provvederà alla rettifica con accredito delle somme non dovute.
 ` + chiusura(d);
@@ -884,9 +874,6 @@ DOCUMENTAZIONE NECESSARIA:
   3. Ultima bolletta intestata al precedente titolare (se disponibile);
   4. Lettura del contatore alla data della richiesta.
 
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Voltura: 5 gg lav — Indennizzo automatico: € 30 (€ 60 se 2×, € 90 se 3×).
-  • Subentro con modifica portata: 10 gg lav — Indennizzo automatico: € 30.
 ` + chiusura(d);
 }
 
@@ -903,11 +890,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.matricola ? 'Contatore: matr. ' + dd.matricola + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Attivazione fornitura: 5 gg lav — Indennizzo automatico: € 30.
-  • Riattivazione senza mod. portata: 5 gg lav — Indennizzo automatico: € 30.
-  • Riattivazione con mod. portata: 10 gg lav — Indennizzo automatico: € 30.
-  • Indennizzo crescente: € 60 se tra 2× e 3× lo standard; € 90 se oltre 3×.
 
 Pratica in fase di completamento. L'Utente sarà contattato${dd.telefono ? ' al ' + dd.telefono : ''}${dd.email ? ' / ' + dd.email : ''} per comunicazione esito.
 ` + chiusura(d);
@@ -926,8 +908,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.matricola ? 'Contatore: matr. ' + dd.matricola + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Tempo di disattivazione: 7 gg lav — Indennizzo automatico: € 30.
 
 La fattura di chiusura comprenderà:
   • Conguaglio consumi fino alla data di disattivazione;
@@ -952,12 +932,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Ubicazione: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Preventivo senza sopralluogo: 10 gg lav — Indennizzo: € 30.
-  • Preventivo con sopralluogo: 20 gg lav — Indennizzo: € 30.
-  • Allaccio idrico semplice: 15 gg lav — Indennizzo: € 30.
-  • Allaccio fognario semplice: 20 gg lav — Indennizzo: € 30.
-  • Lavori complessi: ≤ 30 gg lav — Indennizzo: € 30.
 
 I tempi si intendono al netto di autorizzazioni da parte di enti terzi e di adempimenti a carico dell'Utente. SORICAL comunicherà tempestivamente eventuali cause di sospensione dei termini.
 ` + chiusura(d);
@@ -979,11 +953,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.letture ? 'Letture segnalate: ' + dd.letture.join(', ') + ' — saranno utilizzate come riferimento.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Verifica in loco: 10 gg lav — Indennizzo: € 30.
-  • Comunicazione esito in loco: 10 gg lav — Indennizzo: € 30.
-  • Comunicazione esito laboratorio: 30 gg lav — Indennizzo: € 30.
-  • Sostituzione misuratore malfunzionante: 10 gg lav — Indennizzo: € 30.
 
 POSSIBILI ESITI:
   a) REGOLARE (errore ≤ ±5%): fatturazione confermata; costo della verifica addebitabile all'Utente.
@@ -1006,9 +975,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Verifica pressione sul posto: 10 gg lav — Indennizzo: € 30.
-  • Comunicazione esito: 10 gg lav — Indennizzo: € 30.
 
 POSSIBILI ESITI:
   a) CONFORME: pressione entro i parametri normativi; costi di verifica addebitabili.
@@ -1061,12 +1027,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO SEGNALAZIONE:
 ${dd.indirizzo ? 'Fornitura: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}${dd.date && dd.date.length ? 'Date segnalate: ' + dd.date.join(', ') + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI:
-  • Durata max sospensione programmata: 24 ore — Indennizzo: € 30.
-  • Servizio sostitutivo di emergenza: entro 48 ore — Indennizzo: € 30.
-  • Preavviso interruzioni programmate: 48 ore — Indennizzo: € 30.
-  • Tempo di pronto intervento: 180 min (90% dei casi).
-  • Risposta telefonica pronto intervento: < 120 secondi.
 
 N. Verde Pronto Intervento H24: 800.069.129.
 
@@ -1168,11 +1128,6 @@ QUADRO NORMATIVO APPLICABILE:
 
 STATO PRATICA:
 ${dd.indirizzo ? 'Ubicazione lavori: ' + dd.indirizzo + '.\n' : ''}${dd.comune ? 'Comune: ' + dd.comune + '.\n' : ''}${dd.date && dd.date.length ? 'Date di riferimento: ' + dd.date.join(', ') + '.\n' : ''}
-STANDARD DI QUALITÀ GARANTITI (Tab. 2 RQSII):
-  • Preventivo senza sopralluogo: 10 gg lav — Indennizzo: € 30.
-  • Preventivo con sopralluogo: 20 gg lav — Indennizzo: € 30.
-  • Esecuzione lavori semplici: 10 gg lav — Indennizzo: € 30.
-  • Esecuzione lavori complessi: ≤ 30 gg lav — Indennizzo: € 30.
 
 Verifica stato avanzamento pratica in corso. SORICAL comunicherà tempestivamente eventuali cause di sospensione dei termini.
 ` + chiusura(d);
@@ -1192,10 +1147,6 @@ QUADRO NORMATIVO APPLICABILE:
 SORICAL ha avviato istruttoria per verificare i fatti esposti e fornire risposta motivata.
 ${dd.fatture ? '\nFatture citate: ' + dd.fatture.join(', ') + '.' : ''}${dd.importi ? '\nImporti indicati: ' + dd.importi.join(', ') + '.' : ''}${dd.indirizzo ? '\nFornitura: ' + dd.indirizzo + '.' : ''}${dd.matricola ? '\nContatore: matr. ' + dd.matricola + '.' : ''}
 
-STANDARD DI QUALITÀ GARANTITI:
-  • Risposta motivata al reclamo: 30 giorni lavorativi — Indennizzo automatico: € 30.
-  • Indennizzo crescente per ritardo: € 60 (2-3× standard), € 90 (oltre 3×).
-  • Accredito indennizzo: prima bolletta utile entro 180 giorni, con causale "Indennizzo automatico per mancato rispetto dei livelli specifici di qualità contrattuale".
 ` + chiusura(d);
 }
 
