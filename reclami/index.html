@@ -139,6 +139,7 @@ textarea:focus { outline: none; border-color: var(--blu); }
     position: relative;
   }
   .upload-zone:hover, .upload-zone.drag { background: #e8f2ff; border-color: #4a90d9; }
+  .upload-zone.has-file { border-style: solid; border-color: #38a169; background: #f0fff4; }
   .upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
   .upload-zone .uz-icon { font-size: 1.8rem; margin-bottom: 6px; }
   .upload-zone .uz-label { font-size: .88rem; color: #4a7ab5; font-weight: 600; }
@@ -179,6 +180,18 @@ textarea:focus { outline: none; border-color: var(--blu); }
   .btn-ocr-allegato:hover { background:#0050b3; }
   .btn-ocr-allegato.attivo { background:#276749; }
 
+  /* UPLOAD TABS */
+  .upload-tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 2px solid var(--bordo); }
+  .upload-tab {
+    flex: 1; padding: 10px 12px; border: none; background: none; font-family: inherit;
+    font-size: .88rem; font-weight: 600; color: var(--txt2); cursor: pointer;
+    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .15s;
+  }
+  .upload-tab:hover { color: var(--blu); background: #f0f6ff; }
+  .upload-tab.active { color: var(--blu); border-bottom-color: var(--blu); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
   footer {
     text-align: center; font-size: .78rem; color: var(--txt2); padding: 20px 16px;
     border-top: 1px solid var(--bordo); margin-top: 20px;
@@ -212,40 +225,47 @@ textarea:focus { outline: none; border-color: var(--blu); }
 
       <!-- UPLOAD -->
       <div class="card">
-        <div class="card-head">1. Carica file reclamo</div>
+        <div class="card-head">1. Carica reclamo</div>
         <div class="card-body">
-        <!-- MODALITÀ CONTATORE -->
-        <div class="modo-contatore-row">
-          <label>
-            <input type="checkbox" id="modo-contatore">
-            📷 Modalità contatore — carica foto del contatore e rileva la lettura automaticamente
-          </label>
+
+        <!-- TAB SELEZIONE TIPO FILE -->
+        <div class="upload-tabs">
+          <button class="upload-tab active" onclick="switchTab('png')">🖼️ Immagine/PNG</button>
+          <button class="upload-tab" onclick="switchTab('eml')">📧 Email .eml</button>
         </div>
 
-        <!-- UPLOAD IMMAGINE -->
-        <div class="upload-zone" id="upload-zone"
-             ondragover="event.preventDefault();this.classList.add('drag')"
-             ondragleave="this.classList.remove('drag')"
-             ondrop="handleDrop(event)"
-             onclick="document.getElementById('file-input').click()">
-          <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.bmp,.tiff,.webp,.pdf" onchange="handleFile(this.files[0])" onclick="event.stopPropagation()">
-          <div class="uz-icon">🖼️</div>
-          <div class="uz-label">Carica immagine reclamo (JPG, PNG, PDF…)</div>
-          <div class="uz-sub">oppure trascina qui il file — il testo verrà estratto automaticamente</div>
+        <!-- UPLOAD IMMAGINE/PNG -->
+        <div id="tab-png" class="tab-content active">
+          <div class="upload-zone" id="upload-zone"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)"
+               onclick="document.getElementById('file-input').click()">
+            <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.bmp,.tiff,.webp,.pdf" onchange="handleFile(this.files[0])" onclick="event.stopPropagation()">
+            <div class="uz-icon">🖼️</div>
+            <div class="uz-label">Carica immagine reclamo (PNG, JPG, PDF…)</div>
+            <div class="uz-sub">Trascina qui o clicca — il testo verrà estratto con OCR</div>
+          </div>
+          <div class="modo-contatore-row">
+            <label>
+              <input type="checkbox" id="modo-contatore">
+              📷 Modalità contatore — rileva lettura m³ invece del testo
+            </label>
+          </div>
         </div>
 
-        <!-- SEPARATORE + UPLOAD EML -->
-        <div class="eml-sep">oppure carica un'email</div>
-
-        <div class="upload-zone" id="eml-upload-zone"
-             ondragover="event.preventDefault();this.classList.add('drag')"
-             ondragleave="this.classList.remove('drag')"
-             ondrop="handleEMLDrop(event)"
-             onclick="document.getElementById('eml-input').click()">
-          <input type="file" id="eml-input" accept=".eml,message/rfc822" onchange="handleEML(this.files[0])" onclick="event.stopPropagation()">
-          <div class="uz-icon">📧</div>
-          <div class="uz-label">Carica file email (.eml) con allegati</div>
-          <div class="uz-sub">Estrae testo del reclamo e immagini allegate (es. foto contatori)</div>
+        <!-- UPLOAD EML -->
+        <div id="tab-eml" class="tab-content">
+          <div class="upload-zone" id="eml-upload-zone"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleEMLDrop(event)"
+               onclick="document.getElementById('eml-input').click()">
+            <input type="file" id="eml-input" accept=".eml,message/rfc822" onchange="handleEML(this.files[0])" onclick="event.stopPropagation()">
+            <div class="uz-icon">📧</div>
+            <div class="uz-label">Carica file email (.eml)</div>
+            <div class="uz-sub">Estrae testo, mittente, data e allegati</div>
+          </div>
         </div>
 
         <!-- ALLEGATI EMAIL -->
@@ -260,9 +280,8 @@ textarea:focus { outline: none; border-color: var(--blu); }
 
         <!-- LETTURA CONTATORE RILEVATA -->
         <div class="lettura-box" id="lettura-box">
-          <div class="lb-label">Lettura contatore rilevata (m³) — verifica e correggi se necessario:</div>
+          <div class="lb-label">Lettura contatore rilevata (m³) — verifica e correggi:</div>
           <input type="text" id="lettura-contatore" class="lb-input" placeholder="es. 00345.789">
-          <div class="lb-tip">Questa lettura verrà inserita automaticamente nella risposta al reclamo.</div>
         </div>
 
         <!-- BARRA AVANZAMENTO OCR -->
@@ -274,7 +293,7 @@ textarea:focus { outline: none; border-color: var(--blu); }
           <div class="ocr-bar"><div class="ocr-bar-fill" id="ocr-bar-fill"></div></div>
         </div>
 
-        <!-- INFO FILE EML -->
+        <!-- INFO FILE -->
         <div class="file-info" id="file-info">
           <div class="fi-row"><span class="fi-label">File:</span><span id="fi-name">—</span></div>
           <div class="fi-row"><span class="fi-label">Mittente:</span><span id="fi-from">—</span></div>
@@ -338,6 +357,7 @@ textarea:focus { outline: none; border-color: var(--blu); }
             <div class="norma-box" id="norma-box"></div>
           </div>
 
+          <button class="btn btn-primary" onclick="elaboraReclamo()">⚡ Genera risposta</button>
         </div>
       </div>
     </div>
@@ -540,26 +560,29 @@ function estraiDati(testo) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AUTO-GENERA: rileva categoria + genera risposta automaticamente
+// TAB SWITCH + SORGENTE FILE
 // ═══════════════════════════════════════════════════════════════
-let _autoTimer = null;
-function autoGenera() {
-  clearTimeout(_autoTimer);
-  _autoTimer = setTimeout(() => {
-    const t = document.getElementById('testo-reclamo').value.trim();
-    if (t.length < 20) { document.getElementById('cat-detected').innerHTML = ''; return; }
-    const catSel = document.getElementById('cat-select').value;
-    const cat = (catSel === 'auto') ? rilevaCategoria(t) : catSel;
-    const info = CATEGORIE[cat];
-    document.getElementById('cat-detected').innerHTML =
-      `<span class="cat-badge ${catSel === 'auto' ? 'auto' : 'manual'}">${info.label}</span>`;
-    showNorma(cat);
-    elaboraReclamo();
-    setStep(3);
-  }, 300);
+let _fileInfo = {}; // traccia info del file caricato (nome, tipo, dimensione)
+
+function switchTab(tab) {
+  document.querySelectorAll('.upload-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`.upload-tab[onclick*="${tab}"]`).classList.add('active');
 }
 
-document.getElementById('testo-reclamo').addEventListener('input', autoGenera);
+// ═══════════════════════════════════════════════════════════════
+// AUTO-DETECT CATEGORIA LIVE (solo badge, non genera)
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('testo-reclamo').addEventListener('input', function() {
+  const t = this.value.trim();
+  if (t.length < 20) { document.getElementById('cat-detected').innerHTML = ''; return; }
+  if (document.getElementById('cat-select').value !== 'auto') return;
+  const cat = rilevaCategoria(t);
+  const info = CATEGORIE[cat];
+  document.getElementById('cat-detected').innerHTML = `<span class="cat-badge auto">${info.label}</span>`;
+  showNorma(cat);
+});
 
 document.getElementById('cat-select').addEventListener('change', function() {
   if (this.value !== 'auto') {
@@ -568,13 +591,8 @@ document.getElementById('cat-select').addEventListener('change', function() {
       `<span class="cat-badge manual">${CATEGORIE[this.value].label}</span>`;
   } else {
     document.getElementById('norma-box').classList.remove('show');
+    document.getElementById('testo-reclamo').dispatchEvent(new Event('input'));
   }
-  autoGenera();
-});
-
-// Rigenera anche quando si modificano i campi dati
-['nome-utente','protocollo','contratto','lettura-contatore'].forEach(id => {
-  document.getElementById(id).addEventListener('input', autoGenera);
 });
 
 function showNorma(cat) {
@@ -603,7 +621,7 @@ function setStep(n) {
 // ═══════════════════════════════════════════════════════════════
 function elaboraReclamo() {
   const testo = document.getElementById('testo-reclamo').value.trim();
-  if (!testo) return;
+  if (!testo) { alert('Carica prima un file o incolla il testo del reclamo.'); return; }
 
   const catSel = document.getElementById('cat-select').value;
   const cat = (catSel === 'auto') ? rilevaCategoria(testo) : catSel;
@@ -626,42 +644,50 @@ function elaboraReclamo() {
 
   let risposta = info.fn({
     testo, nome, dataReclamo: dataReclamoStr, dataOggi, prot, contratto, lettura,
-    norme: info.norme, standard: info.standard, label: info.label, dati
+    norme: info.norme, standard: info.standard, label: info.label, dati, fileInfo: _fileInfo
   });
 
-  // Inserisce sezione DATI CONTATORE nella risposta se presente lettura o matricola
-  const matricolaVal = dati.matricola || document.getElementById('contratto').value.trim();
+  // Inserisce sezione DATI CONTATORE se presente lettura o matricola
+  const matricolaVal = dati.matricola || contratto;
   if (lettura || matricolaVal) {
-    const oggi2 = new Date();
-    const dataRilevazione = oggi2.toLocaleDateString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric'});
+    const dataRilevazione = dataOggi;
     let sezione = '\nVERIFICA CONTATORE:';
     if (matricolaVal) sezione += `\n  Matricola/Contratto: ${matricolaVal}`;
     if (lettura) sezione += `\n  Lettura rilevata da foto: ${lettura} m³`;
     sezione += `\n  Data rilevazione: ${dataRilevazione}`;
     if (lettura && dati.consumoMc) {
       sezione += `\n  Consumo dichiarato nel reclamo: ${dati.consumoMc} mc`;
-      // Confronto lettura vs consumo dichiarato
       const lettNum = parseFloat(lettura.replace(',', '.'));
       const consNum = parseFloat(dati.consumoMc.replace(',', '.'));
       if (!isNaN(lettNum) && !isNaN(consNum)) {
         const diff = Math.abs(lettNum - consNum);
-        if (diff > 1) sezione += `\n  ⚠ Scostamento lettura/consumo dichiarato: ${diff.toFixed(1)} mc — richiede verifica`;
+        if (diff > 1) sezione += `\n  Scostamento: ${diff.toFixed(1)} mc — richiede verifica`;
       }
     }
     sezione += '\n';
-    // Inserisci dopo la riga ESITO
     if (!risposta.includes('VERIFICA CONTATORE:')) {
       risposta = risposta.replace(/(\nESITO[^\n]*\n)/, '$1' + sezione);
     }
   }
 
   document.getElementById('output-area').value = risposta;
+  setStep(3);
 }
 
 // ═══════════════════════════════════════════════════════════════
 // TEMPLATE: INTESTAZIONE + SINTESI + CHIUSURA
 // ═══════════════════════════════════════════════════════════════
 function intestazione(d) {
+  // Dati sorgente file
+  let sorgente = [];
+  const fi = d.fileInfo || {};
+  if (fi.nome) sorgente.push(`File: ${fi.nome}`);
+  if (fi.tipo) sorgente.push(`Tipo: ${fi.tipo}`);
+  if (fi.mittente) sorgente.push(`Da: ${fi.mittente}`);
+  if (fi.oggetto) sorgente.push(`Oggetto: ${fi.oggetto}`);
+  if (fi.dataEmail) sorgente.push(`Data email: ${fi.dataEmail}`);
+
+  // Dati utente/contratto
   let meta = [];
   if (d.prot) meta.push(`Prot.: ${d.prot}`);
   if (d.contratto) meta.push(`Contratto: ${d.contratto}`);
@@ -669,9 +695,14 @@ function intestazione(d) {
   if (d.dati.indirizzo) meta.push(`Fornitura: ${d.dati.indirizzo}`);
   if (d.dati.codiceCliente) meta.push(`Cod. Cliente: ${d.dati.codiceCliente}`);
   if (d.dati.cf) meta.push(`CF: ${d.dati.cf}`);
+  if (d.dati.email) meta.push(`Email: ${d.dati.email}`);
+  if (d.dati.telefono) meta.push(`Tel: ${d.dati.telefono}`);
 
-  return `OGGETTO: Riscontro al reclamo del ${d.dataReclamo} — ${d.label}
-${meta.length ? meta.join(' | ') + '\n' : ''}
+  let header = `OGGETTO: Riscontro al reclamo del ${d.dataReclamo} — ${d.label}\n`;
+  if (sorgente.length) header += `SORGENTE: ${sorgente.join(' | ')}\n`;
+  if (meta.length) header += `DATI: ${meta.join(' | ')}\n`;
+
+  return header + `
 ${d.nome},
 
 in riferimento al Suo reclamo del ${d.dataReclamo}${d.prot ? ` (prot. ${d.prot})` : ''}, Le comunichiamo quanto segue.
@@ -1183,6 +1214,7 @@ function copiaRisposta() {
 
 function pulisciTutto() {
   if (!confirm('Cancellare tutto il contenuto?')) return;
+  _fileInfo = {};
   document.getElementById('testo-reclamo').value = '';
   document.getElementById('output-area').value = '';
   document.getElementById('nome-utente').value = '';
@@ -1200,8 +1232,8 @@ function pulisciTutto() {
   const emlZone = document.getElementById('eml-upload-zone');
   emlZone.classList.remove('has-file');
   emlZone.querySelector('.uz-icon').textContent = '📧';
-  emlZone.querySelector('.uz-label').textContent = 'Carica file email (.eml) con allegati';
-  emlZone.querySelector('.uz-sub').textContent = 'Estrae testo del reclamo e immagini allegate (es. foto contatori)';
+  emlZone.querySelector('.uz-label').textContent = 'Carica file email (.eml)';
+  emlZone.querySelector('.uz-sub').textContent = 'Estrae testo, mittente, data e allegati';
   document.getElementById('eml-allegati').style.display = 'none';
   document.getElementById('eml-allegati-list').innerHTML = '';
   document.getElementById('ocr-bar-wrap').classList.remove('show');
@@ -1711,6 +1743,16 @@ function handleEML(file) {
     const nAllegati = parsed.attachments.length;
     const nImg = parsed.attachments.filter(a => a.mimeType.startsWith('image/')).length;
 
+    // Salva info file sorgente per la risposta
+    _fileInfo = {
+      nome: file.name || 'email.eml',
+      tipo: 'email (.eml)',
+      mittente: parsed.from || '',
+      oggetto: parsed.subject || '',
+      dataEmail: parsed.date || '',
+      sorgente: 'eml'
+    };
+
     // Feedback visivo: upload zone EML → stato caricato
     const emlZone = document.getElementById('eml-upload-zone');
     emlZone.classList.add('has-file');
@@ -1881,6 +1923,17 @@ function estraiLettura(testo) {
 async function handleFile(file) {
   if (!file) return;
   const isContatore = document.getElementById('modo-contatore').checked;
+
+  // Salva info file sorgente
+  const fName = file.name || 'immagine';
+  const fSize = file.size ? (file.size / 1024).toFixed(0) + ' KB' : '';
+  const fType = file.type || 'image';
+  _fileInfo = { nome: fName, tipo: fType + (fSize ? ` (${fSize})` : ''), sorgente: 'immagine' };
+
+  // Feedback visivo upload zone
+  const uz = document.getElementById('upload-zone');
+  uz.classList.add('has-file');
+  setStep(2);
 
   // Anteprima originale
   if (file.type && file.type.startsWith('image/')) {
