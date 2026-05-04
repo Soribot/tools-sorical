@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Richiesta Voltura — SORICAL S.p.A.</title>
+<title>Richiesta Voltura — Servizio Idrico Integrato</title>
 <style>
 /* ── PASSWORD OVERLAY ── */
 #pw-overlay {
@@ -451,7 +451,7 @@ body {
 <!-- PASSWORD OVERLAY -->
 <div id="pw-overlay">
   <div id="pw-box">
-    <h2>SORICAL S.p.A.</h2>
+    <h2>Area Riservata</h2>
     <p>Area riservata — Inserisci la password per accedere</p>
     <input type="password" id="pw-input" placeholder="Password" autofocus>
     <button onclick="checkPw()">Accedi</button>
@@ -476,10 +476,10 @@ document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.
 
 <!-- HEADER -->
 <div class="header">
-  <img src="https://sorical.cloudeng.it/public/dam/jcr:ccd0d3ce-68e4-4007-bef1-ed40bf910878/Logo.png" alt="SORICAL" class="header-logo">
+  <img src="https://via.placeholder.com/180x40/0a3472/ffffff?text=SII" alt="Gestore Idrico" class="header-logo">
   <div class="header-divider"></div>
   <div class="header-text">
-    <h1>SORICAL S.p.A. — Servizio Idrico Integrato</h1>
+    <h1>Gestore Idrico S.p.A. — Servizio Idrico Integrato</h1>
     <p>Richiesta di Voltura Contratto — Art. 10 Regolamento SII</p>
   </div>
 </div>
@@ -937,7 +937,7 @@ document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.
         <div class="success-screen">
           <div class="success-icon">✅</div>
           <h2>Richiesta Inviata con Successo!</h2>
-          <p>La tua richiesta di voltura è stata ricevuta da SORICAL S.p.A.</p>
+          <p>La tua richiesta di voltura è stata ricevuta da Gestore Idrico S.p.A.</p>
           <p>Riceverai una email di conferma all'indirizzo indicato.</p>
           <div class="protocol-box">
             <div class="label">Numero di Protocollo</div>
@@ -957,9 +957,9 @@ document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.
 
 <!-- FOOTER -->
 <footer style="background:#0e3f90;color:rgba(255,255,255,.75);text-align:center;padding:18px 24px;font-size:.76rem;margin-top:0;line-height:1.9;">
-  <strong style="color:white;">SORICAL S.p.A.</strong> — Viale Europa 35, Loc. Germaneto 88100 Catanzaro Lido (CZ) &nbsp;|&nbsp; C.F. 02559020793<br>
+  <strong style="color:white;">Gestore Idrico S.p.A.</strong> — Viale Europa 35, Loc. Germaneto 88100 Catanzaro Lido (CZ) &nbsp;|&nbsp; C.F. XXXXXXXXXXX<br>
   Servizio Clienti: <a href="tel:800985085" style="color:rgba(255,255,255,.9);">800 985 085</a> (gratuito) &nbsp;|&nbsp;
-  <a href="mailto:info@soricalspa.it" style="color:rgba(255,255,255,.9);">info@soricalspa.it</a>
+  <a href="mailto:info@gestoreidrico.it" style="color:rgba(255,255,255,.9);">info@gestoreidrico.it</a>
 </footer>
 
 <script>
@@ -1115,18 +1115,18 @@ function inviaOTP() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      sender: { name: 'SORICAL S.p.A.', email: 'gianluigi.guarascio@gmail.com' },
+      sender: { name: 'Gestore Idrico S.p.A.', email: 'gianluigi.guarascio@gmail.com' },
       to: [{ email: email }],
-      subject: 'Codice OTP — Richiesta Voltura SORICAL',
+      subject: 'Codice OTP — Richiesta Voltura Gestore Idrico',
       htmlContent:
         '<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:24px;border:1px solid #ddd;border-radius:8px">' +
-        '<img src="https://sorical.cloudeng.it/public/dam/jcr:ccd0d3ce-68e4-4007-bef1-ed40bf910878/Logo.png" style="height:40px;margin-bottom:16px"><br>' +
+        '<img src="https://via.placeholder.com/180x40/0a3472/ffffff?text=SII" style="height:40px;margin-bottom:16px"><br>' +
         '<p>Gentile <strong>' + nome + '</strong>,</p>' +
         '<p>il tuo codice OTP per la richiesta di voltura è:</p>' +
         '<div style="font-size:32px;font-weight:bold;letter-spacing:10px;color:#1458a8;background:#eef4ff;padding:16px;text-align:center;border-radius:8px;margin:16px 0">' + otpGenerato + '</div>' +
         '<p style="color:#666;font-size:13px">Valido per 10 minuti. Non condividerlo con nessuno.</p>' +
         '<hr style="border:none;border-top:1px solid #eee;margin:16px 0">' +
-        '<p style="color:#999;font-size:11px">SORICAL S.p.A. — Viale Europa 35, Germaneto 88100 Catanzaro Lido (CZ)</p>' +
+        '<p style="color:#999;font-size:11px">Gestore Idrico S.p.A. — Viale Europa 35, Germaneto 88100 Catanzaro Lido (CZ)</p>' +
         '</div>'
     })
   })
@@ -1174,7 +1174,7 @@ function apriModuloUfficiale() {
   var tipoRich  = r('tipoRichiedente');
   var dataOggi  = new Date().toLocaleDateString('it-IT');
   var proto     = document.getElementById('numero_protocollo').textContent;
-  var logoUrl   = 'https://sorical.cloudeng.it/public/dam/jcr:ccd0d3ce-68e4-4007-bef1-ed40bf910878/Logo.png';
+  var logoUrl   = 'https://via.placeholder.com/180x40/0a3472/ffffff?text=SII';
 
   var acc  = r('accessibilita');
   var tip  = r('tipImm');
@@ -1184,7 +1184,7 @@ function apriModuloUfficiale() {
 
   var h = '';
   h += '<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">';
-  h += '<title>Richiesta Voltura \u2014 SORICAL</title>';
+  h += '<title>Richiesta Voltura \u2014 Gestore Idrico</title>';
   h += '<style>';
   h += '* { box-sizing:border-box; margin:0; padding:0; }';
   h += 'body { font-family:Arial,sans-serif; font-size:9pt; color:#000; background:#fff; }';
@@ -1225,11 +1225,11 @@ function apriModuloUfficiale() {
   h += '<div class="proto"><span><strong>N&deg; Protocollo:</strong> ' + proto + '</span><span><strong>Data:</strong> ' + dataOggi + '</span><span>Pag. 1 di 4</span></div>';
 
   h += '<div class="pg-header">';
-  h += '<img class="pg-header-logo" src="' + logoUrl + '" alt="SORICAL">';
+  h += '<img class="pg-header-logo" src="' + logoUrl + '" alt="Gestore Idrico">';
   h += '<div class="pg-header-title">';
   h += '<h2>SERVIZIO IDRICO INTEGRATO — RICHIESTA VOLTURA</h2>';
-  h += '<p>(Ai sensi dell\'art. 10 del Regolamento SII SORICAL)</p>';
-  h += '<p>Inviare tramite SPORTELLO ONLINE: <b>https://www.soricalspa.com/servizi-commerciali/sportello-online/</b></p>';
+  h += '<p>(Ai sensi dell\'art. 10 del Regolamento SII Gestore Idrico)</p>';
+  h += '<p>Inviare tramite SPORTELLO ONLINE: <b>https://www.gestoreidrico.it/servizi-commerciali/sportello-online/</b></p>';
   h += '</div></div>';
 
   h += '<div class="note">(Dichiarazione sostitutiva di certificazione e di atto di notoriet\u00e0 ai sensi degli artt. 46/47 del d.p.r. 28/12/2000 n. 445) Le dichiarazioni sottostanti sono rese sotto la propria responsabilit\u00e0, nella consapevolezza delle sanzioni penali previste dall\'art. 76 del d.p.r. n. 445/2000 nel caso di dichiarazioni non veritiere, di formazione o uso di atti falsi.</div>';
@@ -1309,7 +1309,7 @@ function apriModuloUfficiale() {
   h += '<div class="field w50"><label>PEC FATTURAZIONE</label><input type="text"></div>';
   h += '</div></div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════════════════════════════════════════
      PAGINA 2
@@ -1406,7 +1406,7 @@ function apriModuloUfficiale() {
   h += '</div>';
   h += '</div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════════════════════════════════════════
      PAGINA 3
@@ -1483,7 +1483,7 @@ function apriModuloUfficiale() {
   h += '<div class="row"><div class="field w100"><label>ULTERIORI DICHIARAZIONI</label><textarea style="min-height:28px"></textarea></div></div>';
   h += '</div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════════════════════════════════════════
      PAGINA 4
@@ -1494,8 +1494,8 @@ function apriModuloUfficiale() {
   /* DICHIARAZIONI FINALI */
   h += '<div class="note" style="font-size:8pt">';
   h += '<strong>DICHIARAZIONI FINALI</strong><br>';
-  h += 'Di essere a conoscenza che SORICAL SPA potr\u00e0 verificare presso gli enti competenti la veridicità delle dichiarazioni rese e/o richiedere di visionare l\'indicata documentazione in originale. Inoltre, potr\u00e0 essere richiesta ulteriore documentazione o chiarimenti per una esatta valutazione della presente richiesta.<br><br>';
-  h += 'Ai sensi dell\'art. 1341 c.c., di aver preso esatta cognizione del Regolamento per la Gestione del Servizio Idrico di SORICAL approvato con Decreto del Commissario Straordinario ARRICAL n\u00b0 167 del 25/09/2023, di essere edotto sul contenuto e di accettare tutte le condizioni, prescrizioni e disposizioni in esso previste e si obbliga a rispettarlo ed a farlo rispettare a tutti coloro che utilizzeranno la fornitura idrica. Il contenuto del Regolamento, pertanto, qui si intende integralmente trascritto e qualunque disposizione di esso si intende espressamente accettata dall\'utente.';
+  h += 'Di essere a conoscenza che Gestore Idrico SPA potr\u00e0 verificare presso gli enti competenti la veridicità delle dichiarazioni rese e/o richiedere di visionare l\'indicata documentazione in originale. Inoltre, potr\u00e0 essere richiesta ulteriore documentazione o chiarimenti per una esatta valutazione della presente richiesta.<br><br>';
+  h += 'Ai sensi dell\'art. 1341 c.c., di aver preso esatta cognizione del Regolamento per la Gestione del Servizio Idrico di Gestore Idrico approvato con Decreto del Commissario Straordinario ARRICAL n\u00b0 167 del 25/09/2023, di essere edotto sul contenuto e di accettare tutte le condizioni, prescrizioni e disposizioni in esso previste e si obbliga a rispettarlo ed a farlo rispettare a tutti coloro che utilizzeranno la fornitura idrica. Il contenuto del Regolamento, pertanto, qui si intende integralmente trascritto e qualunque disposizione di esso si intende espressamente accettata dall\'utente.';
   h += '</div>';
 
   /* NOTE LEGALI */
@@ -1506,7 +1506,7 @@ function apriModuloUfficiale() {
   h += '<div class="st">SOTTOSCRIZIONE</div>';
   h += '<div style="padding:4px 6px;font-size:7.5pt;background:#f9f9f9;border-top:1px solid #ccc;line-height:1.5">';
   h += '<strong>Informativa sul trattamento dei dati personali.</strong> In occasione dell\'applicabilit\u00e0 nell\'Unione Europea del Regolamento (UE) 2016/679 (GDPR) abbiamo aggiornato la nostra informativa sul trattamento dei dati personali. ';
-  h += 'Al fine di conoscere tutte le informazioni sui trattamenti in relazione allo specifico rapporto di fornitura idrica, pu\u00f2 prendere visione della nostra informativa aggiornata presso i nostri uffici di gestione clienti o consultando il nostro sito alla pagina https://www.soricalspa.com';
+  h += 'Al fine di conoscere tutte le informazioni sui trattamenti in relazione allo specifico rapporto di fornitura idrica, pu\u00f2 prendere visione della nostra informativa aggiornata presso i nostri uffici di gestione clienti o consultando il nostro sito alla pagina https://www.gestoreidrico.it';
   h += '</div>';
   h += '<div class="row" style="min-height:55px">';
   h += '<div class="field w50"><label>FIRMA LEGGIBILE DEL VOLTURANTE</label><input type="text" style="margin-top:25px"></div>';
@@ -1525,10 +1525,10 @@ function apriModuloUfficiale() {
   h += '<label style="display:flex;align-items:flex-start;gap:6px"><input type="checkbox" style="margin-top:2px;flex-shrink:0"> Report fotografico: 1) Foto quadrante misuratore esistente; 2) Foto nicchia di alloggiamento misuratore</label>';
   h += '</div>';
   h += '<div style="padding:4px 8px;font-size:7.5pt;font-style:italic;background:#f5f5f5;border-top:1px solid #ccc">';
-  h += '* Ai sensi dell\'art. 10, comma 3 Regolamento per la Gestione del Servizio Idrico di SORICAL e dell\'Allegato A) Tab 1, con la prima fattura utile si proceder\u00e0 all\'addebito dei costi previsti.';
+  h += '* Ai sensi dell\'art. 10, comma 3 Regolamento per la Gestione del Servizio Idrico di Gestore Idrico e dell\'Allegato A) Tab 1, con la prima fattura utile si proceder\u00e0 all\'addebito dei costi previsti.';
   h += '</div></div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
   h += '<button class="btn" onclick="window.print()">&#128424; Stampa / Salva come PDF</button>';
   h += '</div></body></html>';
 
@@ -1537,11 +1537,11 @@ function apriModuloUfficiale() {
   h += '<div class="proto"><strong>N&deg; Protocollo:</strong> ' + proto + ' &nbsp;&nbsp; <strong>Data:</strong> ' + dataOggi + '</div>';
 
   h += '<div class="header">';
-  h += '<img class="header-logo" src="' + logoUrl + '" alt="SORICAL">';
+  h += '<img class="header-logo" src="' + logoUrl + '" alt="Gestore Idrico">';
   h += '<div class="header-title">';
   h += '<h2>SERVIZIO IDRICO INTEGRATO<br>RICHIESTA VOLTURA</h2>';
-  h += '<p>(Ai sensi dell\'art. 10 del Regolamento SII SORICAL)</p>';
-  h += '<p>Inviare da SPORTELLO ONLINE: <b>https://www.soricalspa.com/servizi-commerciali/sportello-online/</b></p>';
+  h += '<p>(Ai sensi dell\'art. 10 del Regolamento SII Gestore Idrico)</p>';
+  h += '<p>Inviare da SPORTELLO ONLINE: <b>https://www.gestoreidrico.it/servizi-commerciali/sportello-online/</b></p>';
   h += '</div></div>';
 
   /* SEZIONE 1 */
@@ -1678,7 +1678,7 @@ function apriModuloUfficiale() {
   h += '<label><input type="checkbox"> utenza non relativa ad un immobile o immobile non iscrivibile in catasto</label>';
   h += '</div></div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════ PAGINA 3 ═══════════ */
   h += '<div style="page-break-before:always"></div>';
@@ -1756,7 +1756,7 @@ function apriModuloUfficiale() {
   h += '<div class="row"><div class="field w100"><label>ULTERIORI DICHIARAZIONI</label><textarea style="min-height:30px"></textarea></div></div>';
   h += '</div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════ PAGINA 4 ═══════════ */
   h += '<div style="page-break-before:always"></div>';
@@ -1765,8 +1765,8 @@ function apriModuloUfficiale() {
   /* DICHIARAZIONI FINALI */
   h += '<div class="note" style="font-size:8pt;margin-bottom:4px">';
   h += '<strong>DICHIARAZIONI FINALI</strong><br>';
-  h += 'Di essere a conoscenza che SORICAL SPA potr\u00e0 verificare presso gli enti competenti la veridicità delle dichiarazioni rese e/o richiedere di visionare l\'indicata documentazione in originale. Inoltre, potr\u00e0 essere richiesta ulteriore documentazione o chiarimenti per una esatta valutazione della presente richiesta.<br><br>';
-  h += 'Ai sensi dell\'art. 1341 c.c., di aver preso esatta cognizione del Regolamento per la Gestione del Servizio Idrico di SORICAL approvato con Decreto del Commissario Straordinario ARRICAL n\u00b0 167 del 25/09/2023, di essere edotto sul contenuto e di accettare tutte le condizioni, prescrizioni e disposizioni in esso previste e si obbliga a rispettarlo ed a farlo rispettare a tutti coloro che utilizzeranno la fornitura idrica.';
+  h += 'Di essere a conoscenza che Gestore Idrico SPA potr\u00e0 verificare presso gli enti competenti la veridicità delle dichiarazioni rese e/o richiedere di visionare l\'indicata documentazione in originale. Inoltre, potr\u00e0 essere richiesta ulteriore documentazione o chiarimenti per una esatta valutazione della presente richiesta.<br><br>';
+  h += 'Ai sensi dell\'art. 1341 c.c., di aver preso esatta cognizione del Regolamento per la Gestione del Servizio Idrico di Gestore Idrico approvato con Decreto del Commissario Straordinario ARRICAL n\u00b0 167 del 25/09/2023, di essere edotto sul contenuto e di accettare tutte le condizioni, prescrizioni e disposizioni in esso previste e si obbliga a rispettarlo ed a farlo rispettare a tutti coloro che utilizzeranno la fornitura idrica.';
   h += '</div>';
 
   /* NOTE LEGALI */
@@ -1779,7 +1779,7 @@ function apriModuloUfficiale() {
   h += '<div class="section-title">SOTTOSCRIZIONE</div>';
   h += '<div style="padding:4px 6px;font-size:7.5pt;background:#f9f9f9;border-bottom:1px solid #ccc;line-height:1.5">';
   h += '<strong>Informativa sul trattamento dei dati personali.</strong> In occasione dell\'applicabilit\u00e0 nell\'Unione Europea del Regolamento (UE) 2016/679 (GDPR) abbiamo aggiornato la nostra informativa sul trattamento dei dati personali. ';
-  h += 'Al fine di conoscere tutte le informazioni sui trattamenti in relazione allo specifico rapporto di fornitura idrica, pu\u00f2 prendere visione della nostra informativa aggiornata presso i nostri uffici di gestione clienti o consultando il nostro sito alla pagina https://www.soricalspa.com';
+  h += 'Al fine di conoscere tutte le informazioni sui trattamenti in relazione allo specifico rapporto di fornitura idrica, pu\u00f2 prendere visione della nostra informativa aggiornata presso i nostri uffici di gestione clienti o consultando il nostro sito alla pagina https://www.gestoreidrico.it';
   h += '</div>';
   h += '<div class="row" style="min-height:50px">';
   h += '<div class="field w50"><label>FIRMA LEGGIBILE DEL VOLTURANTE</label><input type="text" style="font-style:italic;margin-top:20px"></div>';
@@ -1798,10 +1798,10 @@ function apriModuloUfficiale() {
   h += '<label style="display:flex;align-items:flex-start;gap:6px;margin-bottom:3px"><input type="checkbox" style="margin-top:2px"> Report fotografico: 1) Foto quadrante misuratore esistente; 2) Foto nicchia di alloggiamento misuratore</label>';
   h += '</div>';
   h += '<div style="padding:5px 8px;font-size:7.5pt;font-style:italic;background:#f5f5f5;border-top:1px solid #ccc">';
-  h += '* Ai sensi dell\'art. 10, comma 3 Regolamento per la Gestione del Servizio Idrico di SORICAL e dell\'Allegato A) Tab 1, con la prima fattura utile si proceder\u00e0 all\'addebito dei costi previsti.';
+  h += '* Ai sensi dell\'art. 10, comma 3 Regolamento per la Gestione del Servizio Idrico di Gestore Idrico e dell\'Allegato A) Tab 1, con la prima fattura utile si proceder\u00e0 all\'addebito dei costi previsti.';
   h += '</div></div>';
 
-  h += '<div class="footer">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
 
   /* ═══════════════════════════════════════════════
      PAGINA 5 — MODALITÀ PRESENTAZIONE DELLA DOMANDA
@@ -1813,14 +1813,14 @@ function apriModuloUfficiale() {
   h += '<div class="st" style="font-size:10pt;text-align:center;padding:6px">MODALIT\u00c0 PRESENTAZIONE DELLA DOMANDA</div>';
   h += '<div style="padding:12px 16px;font-size:9pt;line-height:1.7">';
   h += '<p style="margin-bottom:12px">Il presente modello \u00e8 reso disponibile in formato pdf editabile e stampabile. La compilazione pu\u00f2 essere eseguita attraverso la tastiera del P.C. scrivendo negli appositi spazi disponibili, ovvero stampando il modulo e scrivendo i dati richiesti manualmente in stampatello in modo chiaro e leggibile.</p>';
-  h += '<p style="margin-bottom:16px">Il modello stampato e sottoscritto, unitamente agli allegati, deve essere presentato direttamente a SORICAL SPA tramite una delle seguenti modalit\u00e0:</p>';
+  h += '<p style="margin-bottom:16px">Il modello stampato e sottoscritto, unitamente agli allegati, deve essere presentato direttamente a Gestore Idrico SPA tramite una delle seguenti modalit\u00e0:</p>';
   h += '<div style="border:1.5px solid #00a0c6;border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">';
   h += '<span style="color:#00a0c6;font-size:1.3em;font-weight:bold;flex-shrink:0">\u2713</span>';
-  h += '<div><strong>MYSORICAL</strong><br>accedendo da <b>www.soricalspa.com</b> oppure scaricandola dall\'App Store di Android o iOS</div>';
+  h += '<div><strong>MYGestore Idrico</strong><br>accedendo da <b>www.gestoreidrico.it</b> oppure scaricandola dall\'App Store di Android o iOS</div>';
   h += '</div>';
   h += '<div style="border:1.5px solid #00a0c6;border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">';
   h += '<span style="color:#00a0c6;font-size:1.3em;font-weight:bold;flex-shrink:0">\u2713</span>';
-  h += '<div><strong>SPORTELLO ONLINE</strong><br><a href="https://www.soricalspa.com/servizi-commerciali/sportello-online/" style="color:#00a0c6">https://www.soricalspa.com/servizi-commerciali/sportello-online/</a></div>';
+  h += '<div><strong>SPORTELLO ONLINE</strong><br><a href="https://www.gestoreidrico.it/servizi-commerciali/sportello-online/" style="color:#00a0c6">https://www.gestoreidrico.it/servizi-commerciali/sportello-online/</a></div>';
   h += '</div>';
   h += '<div style="border:1.5px solid #00a0c6;border-radius:8px;padding:14px 18px;margin-bottom:0;display:flex;align-items:flex-start;gap:12px">';
   h += '<span style="color:#00a0c6;font-size:1.3em;font-weight:bold;flex-shrink:0">\u2713</span>';
@@ -1828,7 +1828,7 @@ function apriModuloUfficiale() {
   h += '</div>';
   h += '</div></div>';
 
-  h += '<div class="footer" style="margin-top:20px">SORICAL SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: 02559020793</div>';
+  h += '<div class="footer" style="margin-top:20px">Gestore Idrico SPA &ndash; Viale Europa 35, Localit\u00e0 Germaneto 88100 Catanzaro Lido (CZ) &mdash; C.F.: XXXXXXXXXXX</div>';
   h += '<button class="btn" onclick="window.print()">&#128424; Stampa / Salva come PDF</button>';
   h += '</div></body></html>';
 
